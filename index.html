@@ -129,6 +129,7 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.primary:hover:not(:disabled){background:#ffc85a}
 .btn.sm{padding:5px 10px;font-size:12px}
+.btn.danger{border-color:var(--down);color:var(--down)}
 .btn.wide{width:100%}
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
 .field>span{font-size:12px;color:var(--muted);font-weight:700}
@@ -1087,6 +1088,7 @@ function cardHTML(c){
            : `<span class="cd">${fmtDate(Date.parse(c.ends_at))}</span>`;
   let btn;
   if(st==='done') btn = `<button class="btn sm" data-open="${c.id}">Результаты</button>`;
+  else if(joined && waiting && me && c.created_by===me.id) btn = `<span style="display:flex;gap:6px"><button class="btn sm" data-cancel="${c.id}">Отменить</button><button class="btn sm primary" data-open="${c.id}">Открыть</button></span>`;
   else if(joined) btn = `<button class="btn sm primary" data-open="${c.id}">Открыть</button>`;
   else if(duel && n>=2) btn = `<button class="btn sm" data-open="${c.id}">Смотреть</button>`;
   else btn = `<button class="btn sm primary" data-join="${c.id}">${duel?'Принять вызов':'Участвовать'}</button>`;
@@ -1105,6 +1107,7 @@ $('arenaBody').addEventListener('click', async e => {
   else if(t.hasAttribute('data-create')) openCreate();
   else if(t.dataset.open) location.hash = '#c/'+t.dataset.open;
   else if(t.dataset.join) joinComp(t.dataset.join, t);
+  else if(t.dataset.cancel) cancelDuel(t.dataset.cancel, t);
 });
 $('btnCreate').addEventListener('click', ()=>openCreate());
 
@@ -1336,7 +1339,7 @@ function renderComp(){
   // Игрок один дольше 3 минут — зовём бота (сервер сам проверит условия)
   const myPart = me && comp.parts.find(p=>p.user_id===me.id);
   comp.botAt = myPart && comp.parts.length===1 && !comp.bot && st!=='done' ? Date.parse(myPart.joined_at)+180e3 : null;
-  if(comp.botAt && now()>=comp.botAt && !comp.summoning && Date.now()-comp.summonAt>8000){
+  if(comp.botAt && now()>=comp.botAt && !comp.summoning && !comp.cancelling && Date.now()-comp.summonAt>8000){
     comp.summoning = true; comp.summonAt = Date.now();
     sb.rpc('summon_bot', {p_competition:comp.id}).then(() => { comp.summoning = false; refreshComp(); });
   }
@@ -1383,13 +1386,17 @@ function renderTrade(mine, st, waitingDuel){
   let msg = '', btn = '';
   if(!me){ msg = 'Войдите, чтобы участвовать и торговать.'; btn = '<button class="btn primary" data-a="login">Войти или зарегистрироваться</button>'; }
   else if(!mine && st!=='done'){ msg = `Вы ещё не участвуете. Стартовый баланс — ${fmtInt(comp.c.start_balance)} $.`; btn = '<button class="btn primary" data-a="join">Участвовать</button>'; }
-  else if(waitingDuel){ msg = `<b>Ищем соперника…</b><br>Схватка начнётся, как только кто-то примет вызов. Если никто не найдётся, через <b class="num" data-cd="${comp.botAt||Date.parse(comp.c.starts_at)}"></b> с вами сыграет бот.`; btn = '<button class="btn" data-a="share">Позвать друга по ссылке</button>'; }
+  else if(waitingDuel){ msg = `<b>Ищем соперника…</b><br>Схватка начнётся, как только кто-то примет вызов. Если никто не найдётся, через <b class="num" data-cd="${comp.botAt||Date.parse(comp.c.starts_at)}"></b> с вами сыграет бот.`; btn = '<button class="btn" data-a="share">Позвать друга по ссылке</button> <button class="btn" data-a="cancel">Отменить поиск</button>'; }
   else if(st==='soon'){ msg = 'Соревнование ещё не началось. Торговля откроется по таймеру.'
       + (comp.botAt ? ` <span class="wait-note">Если никто не присоединится, через <b class="num" data-cd="${comp.botAt}"></b> подключится бот.</span>` : ''); }
-  else if(st==='live' && comp.botAt && state.mode==='live'){ msg = `<span class="wait-note">Вы пока один. Если никто не присоединится, через <b class="num" data-cd="${comp.botAt}"></b> подключится бот.</span>`; }
+  else if(st==='live' && comp.botAt && state.mode==='live'){ msg = `<span class="wait-note">Вы пока один. Если никто не присоединится, через <b class="num" data-cd="${comp.botAt}"></b> подключится бот.</span>`;
+    if(canCancelDuel()) btn = '<button class="btn" data-a="cancel">Отменить схватку</button>'; }
   else if(st==='done'){ msg = mine ? `Соревнование завершено. Ваш результат: <b>${fmtUsd(mine.eq)}</b> (${fmtPct(mine.pnl)}).` : 'Соревнование завершено.'; btn = '<button class="btn" data-a="board">Смотреть рейтинг</button>'; }
   else if(state.mode==='demo'){ msg = 'Нет связи с Binance: без реальных цен торговать нельзя. Обновите страницу позже.'; }
-  $('tpState').hidden = !msg; $('tpState').innerHTML = msg + (btn?'<br>'+btn:'');
+  const html = msg + (btn?'<br>'+btn:'');
+  if($('tpState').querySelector('[data-sure]')) { /* ждём второго нажатия — не трогаем кнопку */ }
+  else if($('tpState').dataset.html !== html){ $('tpState').innerHTML = html; $('tpState').dataset.html = html; }
+  $('tpState').hidden = !msg; tick();
   const can = !!mine && st==='live' && state.mode==='live';
   $('tpForm').hidden = !mine || st==='done' || !!waitingDuel;
   $('tpForm').querySelectorAll('button,input').forEach(x=>{ if(x.closest('.sidesw')) return; x.disabled = !can || comp.busy; });
@@ -1439,7 +1446,27 @@ $('tpState').addEventListener('click', e => { const a = e.target.closest('button
   if(a==='login'){ afterLogin = null; openAuth('up'); }
   if(a==='join') joinComp(comp.id, e.target);
   if(a==='board') setTab('board');
-  if(a==='share') $('cbShare').click(); });
+  if(a==='share') $('cbShare').click();
+  if(a==='cancel') cancelDuel(comp.id, e.target.closest('button')); });
+function canCancelDuel(){
+  const c = comp.c; return !!(c && me && c.kind==='duel' && c.created_by===me.id && comp.parts.length===1 && !comp.bot && statusOf(c)!=='done');
+}
+// Отмена в два нажатия: первое спрашивает подтверждение
+async function cancelDuel(id, btn){
+  if(btn && !btn.dataset.sure){
+    btn.dataset.sure = '1'; const t = btn.textContent; btn.textContent = 'Точно отменить?';
+    btn.classList.add('danger'); setTimeout(()=>{ if(btn.isConnected){ delete btn.dataset.sure; btn.textContent = t; btn.classList.remove('danger'); } }, 3000);
+    return;
+  }
+  if(btn) btn.disabled = true;
+  comp.cancelling = true;
+  const {error} = await sb.rpc('cancel_duel', {p_competition:id});
+  comp.cancelling = false;
+  if(error){ if(btn) btn.disabled = false; toast(errText(error), true); if(comp.id===id) refreshComp(); else loadArena(); return; }
+  arena.mine.delete(id); arena.list = arena.list.filter(c=>c.id!==id);
+  toast('Поиск соперника отменён');
+  if(comp.id===id) location.hash = '#arena'; else renderArena();
+}
 $('tpGo').addEventListener('click', placeOrder);
 $('tpAmt').addEventListener('keydown', e => { if(e.key==='Enter') placeOrder(); });
 

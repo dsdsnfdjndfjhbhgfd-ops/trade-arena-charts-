@@ -352,6 +352,30 @@ begin
                            'qty', p_qty, 'price', p_price, 'fee', fee);
 end $$;
 
+-- ---------- Отменить схватку, пока соперник не найден ----------
+create or replace function public.cancel_duel(p_competition uuid)
+returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  c competitions;
+begin
+  if uid is null then raise exception 'Нужно войти в аккаунт'; end if;
+  select * into c from competitions where id = p_competition for update;
+  if not found then raise exception 'Схватка не найдена'; end if;
+  if c.kind <> 'duel' then raise exception 'Отменить можно только схватку'; end if;
+  if c.created_by <> uid then raise exception 'Отменить схватку может только тот, кто её начал'; end if;
+  if now() >= c.ends_at then raise exception 'Схватка уже завершилась'; end if;
+  if exists (select 1 from competition_bots where competition_id = c.id)
+     or (select count(*) from participants where competition_id = c.id) > 1 then
+    raise exception 'Соперник уже найден — схватку нельзя отменить';
+  end if;
+  delete from competitions where id = c.id;
+end $$;
+
+revoke all on function public.cancel_duel(uuid) from public, anon;
+grant execute on function public.cancel_duel(uuid) to authenticated;
+
 -- ---------- Время сервера (для точных таймеров в браузере) ----------
 create or replace function public.server_time()
 returns timestamptz language sql stable set search_path = '' as $$ select now() $$;
