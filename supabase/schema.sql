@@ -354,7 +354,7 @@ end $$;
 
 -- ---------- Время сервера (для точных таймеров в браузере) ----------
 create or replace function public.server_time()
-returns timestamptz language sql stable as $$ select now() $$;
+returns timestamptz language sql stable set search_path = '' as $$ select now() $$;
 
 -- ---------- Права на функции ----------
 grant execute on function public.server_time() to anon, authenticated;
