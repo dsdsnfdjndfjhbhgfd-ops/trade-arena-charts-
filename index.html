@@ -163,8 +163,8 @@ footer.note{padding:10px 16px;font-size:11px;color:var(--dim);border-top:1px sol
 .tp-state .btn{margin-top:10px}
 .sidesw{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:2px;margin-bottom:12px}
 .sidesw button{padding:7px;border-radius:7px;font-weight:800;color:var(--muted)}
-.sidesw button[data-side="buy"][aria-pressed="true"]{background:var(--up);color:#052016}
-.sidesw button[data-side="sell"][aria-pressed="true"]{background:var(--down);color:#2a0710}
+.sidesw button[data-side="buy"][aria-pressed="true"],.sidesw button[data-side="long"][aria-pressed="true"]{background:var(--up);color:#052016}
+.sidesw button[data-side="sell"][aria-pressed="true"],.sidesw button[data-side="short"][aria-pressed="true"]{background:var(--down);color:#2a0710}
 .kv{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0}
 .kv span{color:var(--muted)}
 .kv b{font-family:var(--mono);font-weight:500}
@@ -183,6 +183,44 @@ footer.note{padding:10px 16px;font-size:11px;color:var(--dim);border-top:1px sol
 .empty-s{font-size:12px;color:var(--dim);padding:6px 0}
 
 .board{padding:6px 12px 16px;overflow:auto}
+.bl-h{margin:18px 8px 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#botLog{padding:0 8px}
+.levs{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.levs>span{font-size:12px;color:var(--muted);font-weight:700}
+.levs .chips{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.levs .chips button{padding:5px 0;font-size:11px}
+.fpos{margin-top:14px;border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;background:var(--panel-2)}
+.fpos.long{box-shadow:inset 3px 0 0 var(--up)} .fpos.short{box-shadow:inset 3px 0 0 var(--down)}
+.fpos-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:13px}
+.fpos.long .fpos-h b{color:var(--up)} .fpos.short .fpos-h b{color:var(--down)}
+.fpos-h span{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.fpos-a{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.mkt{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:6px;background:var(--panel-3);color:var(--muted);white-space:nowrap}
+.mkt.fut{background:rgba(180,140,255,.16);color:var(--bb)}
+.elo-chip{font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:5px;background:rgba(245,184,61,.14);color:var(--accent)}
+/* рейтинг */
+.ratingv{grid-column:1/-1;overflow:auto;min-height:0}
+body:not([data-view="rating"]) .ratingv{display:none}
+body[data-view="rating"] .side-l, body[data-view="rating"] main, body[data-view="rating"] .side-r,
+body[data-view="rating"] .quote, body[data-view="rating"] .stats{display:none}
+body[data-view="rating"] .status{margin-left:auto}
+.me-card{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:0 0 22px}
+.me-card .rule b{font-size:22px;color:var(--text);font-family:var(--mono)}
+.me-card .rule>span{display:block;margin-bottom:6px}
+.me-card .rule b span{font-size:inherit;display:inline}
+.me-card .rule b .up{color:var(--up)} .me-card .rule b .down{color:var(--down)}
+.me-card .rule b.elo{color:var(--accent)}
+.rtable{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.rtable th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:right;padding:12px 14px;border-bottom:1px solid var(--line);font-weight:700}
+.rtable td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono);font-size:13px}
+.rtable th:nth-child(-n+2),.rtable td:nth-child(-n+2){text-align:left}
+.rtable td:nth-child(2){font-family:var(--sans);font-weight:700}
+.rtable tr:last-child td{border-bottom:0}
+.rtable tr.me td{background:rgba(245,184,61,.07)}
+.rtable td.elo{color:var(--accent);font-weight:700}
+.rank-1{color:var(--gold)} .rank-2{color:var(--silver)} .rank-3{color:var(--bronze)}
+.hist{margin-top:26px}
+.hist h3{font-size:16px;margin:0 0 10px}
 .b-row{display:grid;grid-template-columns:28px 1fr auto;gap:2px 10px;align-items:center;padding:8px;border-radius:8px}
 .b-row.me{background:rgba(245,184,61,.08);box-shadow:inset 2px 0 0 var(--accent)}
 .b-rank{font-family:var(--mono);font-weight:700;color:var(--muted);text-align:center}
@@ -284,6 +322,8 @@ dialog::backdrop{background:rgba(3,6,10,.72);backdrop-filter:blur(3px)}
   .arena-in{padding:22px 16px 40px}
   .arena-head h1{font-size:26px}
   .rules{grid-template-columns:1fr}
+  .me-card{grid-template-columns:1fr 1fr}
+  .rtable th:nth-child(4),.rtable td:nth-child(4),.rtable th:nth-child(5),.rtable td:nth-child(5){display:none}
   .duel{grid-template-columns:1fr;padding:18px}
   .duel-act{align-items:stretch}
   .duel-act .btn{min-width:0}
@@ -298,6 +338,7 @@ dialog::backdrop{background:rgba(3,6,10,.72);backdrop-filter:blur(3px)}
     <nav class="nav" aria-label="Разделы">
       <a href="#" id="navChart" aria-current="page">Графики</a>
       <a href="#arena" id="navArena">Арена</a>
+      <a href="#rating" id="navRating">Рейтинг</a>
     </nav>
     <div class="quote">
       <div class="quote-sym" id="qSym">BTC<small>/USDT</small></div>
@@ -316,6 +357,7 @@ dialog::backdrop{background:rgba(3,6,10,.72);backdrop-filter:blur(3px)}
         <div class="who"><b id="menuName"></b><span id="menuEmail"></span></div>
         <button data-act="mine">Мои соревнования</button>
         <button data-act="create">Создать соревнование</button>
+        <button data-act="rating">Мой рейтинг</button>
         <button data-act="logout">Выйти</button>
       </div>
     </div>
@@ -328,7 +370,7 @@ dialog::backdrop{background:rgba(3,6,10,.72);backdrop-filter:blur(3px)}
 
   <main>
     <div class="comp-bar" id="compBar" hidden>
-      <div class="cb-title"><span class="pill" id="cbPill"></span><h2 id="cbTitle"></h2></div>
+      <div class="cb-title"><span class="pill" id="cbPill"></span><h2 id="cbTitle"></h2><span class="mkt" id="cbMarket"></span></div>
       <div class="cb-timer"><span id="cbTimerLabel"></span><b id="cbTimer">--:--</b></div>
       <div class="cb-kv" id="cbEqWrap"><span>Ваш капитал</span><b id="cbEq">—</b></div>
       <div class="cb-kv" id="cbPnlWrap"><span>Доход</span><b id="cbPnl">—</b></div>
@@ -367,18 +409,20 @@ dialog::backdrop{background:rgba(3,6,10,.72);backdrop-filter:blur(3px)}
         <div class="tp-state" id="tpState" hidden></div>
         <div id="tpForm">
           <div class="sidesw" role="group" aria-label="Сторона сделки">
-            <button data-side="buy" aria-pressed="true">Купить</button>
-            <button data-side="sell" aria-pressed="false">Продать</button>
+            <button id="tpSideBuy" data-side="buy" aria-pressed="true">Купить</button>
+            <button id="tpSideSell" data-side="sell" aria-pressed="false">Продать</button>
           </div>
+          <div class="levs" id="tpLevWrap" hidden><span>Плечо</span><div class="chips mono" id="tpLev"></div></div>
           <div class="kv"><span>Доступно</span><b id="tpCash">—</b></div>
-          <div class="kv"><span id="tpPosLabel">В позиции</span><b id="tpPos">—</b></div>
+          <div class="kv" id="tpPosRow"><span id="tpPosLabel">В позиции</span><b id="tpPos">—</b></div>
           <div class="kv" style="margin-bottom:10px"><span>Цена</span><b id="tpPrice">—</b></div>
-          <label class="field"><span>Сумма, USDT</span><input id="tpAmt" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
+          <label class="field"><span id="tpAmtLabel">Сумма, USDT</span><input id="tpAmt" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
           <div class="pcts" id="tpPcts"><button data-p="25">25%</button><button data-p="50">50%</button><button data-p="75">75%</button><button data-p="100">100%</button></div>
           <div class="tp-est num" id="tpEst"></div>
           <button class="act buy" id="tpGo">Купить</button>
           <div class="tp-msg" id="tpMsg"></div>
         </div>
+        <div class="fpos" id="tpFPos" hidden></div>
         <h4>Мои позиции</h4>
         <div id="tpPositions"></div>
         <h4>Мои сделки</h4>
@@ -387,7 +431,8 @@ dialog::backdrop{background:rgba(3,6,10,.72);backdrop-filter:blur(3px)}
     </section>
 
     <section class="rpanel" id="pBoard" hidden>
-      <div class="board"><div id="boardList"></div><div class="board-note" id="boardNote"></div></div>
+      <div class="board"><div id="boardList"></div><div class="board-note" id="boardNote"></div>
+        <div id="botLogWrap" hidden><h4 class="bl-h" id="botLogTitle">Сделки бота</h4><div id="botLog"></div></div></div>
     </section>
 
     <section class="rpanel" id="pFeed">
@@ -416,7 +461,7 @@ dialog::backdrop{background:rgba(3,6,10,.72);backdrop-filter:blur(3px)}
         <div>
           <span class="pill vs">1 на 1</span>
           <h2>Быстрая схватка</h2>
-          <p>Дуэль на BTC, ETH и SOL, у обоих по 10 000 $. Подбираем живого соперника, а если за 3 минуты никто не найдётся, с вами сыграет бот.</p>
+          <p>Дуэль на фьючерсах BTC, ETH и SOL: лонг и шорт с плечом до 20x, у обоих по 10 000 $. Подбираем живого соперника, а если за 3 минуты никто не найдётся, с вами сыграет бот. Победа поднимает ваш рейтинг Эло.</p>
         </div>
         <div class="duel-act">
           <div class="chips mono" id="duelDur"></div>
@@ -426,15 +471,29 @@ dialog::backdrop{background:rgba(3,6,10,.72);backdrop-filter:blur(3px)}
       </div>
       <div class="rules">
         <div class="rule"><b>01 · Вступите</b><span>Выберите соревнование и нажмите «Участвовать». Баланс у всех одинаковый.</span></div>
-        <div class="rule"><b>02 · Торгуйте</b><span>Покупайте и продавайте разрешённые монеты, пока идёт таймер. Комиссия 0,1%.</span></div>
+        <div class="rule"><b>02 · Торгуйте</b><span>На споте покупайте и продавайте, на фьючерсах открывайте лонг или шорт с плечом. Следите за ценой ликвидации.</span></div>
         <div class="rule"><b>03 · Капитал</b><span>Деньги плюс монеты по текущей цене. Рейтинг обновляется вживую.</span></div>
-        <div class="rule"><b>04 · Финиш</b><span>Итог считается по цене на момент окончания. Первое место — у самого большого капитала.</span></div>
+        <div class="rule"><b>04 · Финиш</b><span>Итог считается по цене на момент окончания. Побеждает самый большой капитал, рейтинг Эло пересчитывается.</span></div>
       </div>
       <div id="arenaBody"></div>
     </div>
   </section>
+
+  <section class="ratingv" id="ratingView">
+    <div class="arena-in">
+      <div class="arena-head">
+        <div>
+          <h1>Рейтинг Эло</h1>
+          <p>Все начинают с 1000. За победу над более сильным соперником дают больше очков, за поражение от слабого больше снимают. В турнирах результат сравнивается с каждым участником. Игры с ботами идут с половинным весом, у ботов фиксированный рейтинг 1100–1200.</p>
+        </div>
+        <a class="btn primary" href="#arena" style="text-decoration:none">Сыграть схватку</a>
+      </div>
+      <div id="ratingBody"></div>
+    </div>
+  </section>
 </div>
 
+<!-- рейтинг размещается внутри .app — см. ниже -->
 <!-- Вход и регистрация -->
 <dialog id="dlgAuth">
   <form class="dlg" id="authForm" novalidate>
@@ -464,6 +523,7 @@ dialog::backdrop{background:rgba(3,6,10,.72);backdrop-filter:blur(3px)}
     <div class="field"><span>Длительность</span><div class="chips" id="cDur"></div></div>
     <div class="field"><span>Старт</span><div class="chips" id="cStart"></div></div>
     <div class="field"><span>Стартовый баланс</span><div class="chips mono" id="cBal"></div></div>
+    <div class="field"><span>Рынок</span><div class="chips" id="cMarket"></div></div>
     <div class="form-msg" id="createMsg"></div>
     <button class="btn primary wide" type="submit" id="createGo">Создать</button>
   </form>
@@ -638,7 +698,7 @@ function setAll(){
   chart.timeScale().setVisibleLogicalRange({from:Math.max(0,b.length-150), to:b.length+6});
   setTimeout(alignScales, 50);
   legend();
-  updateAvgLine();
+  if(comp.c){ updatePriceLines(); updateMarkers(); }
 }
 function updateLast(){
   const b = state.bars, i = b.length-1, x = b[i]; if(!x) return;
@@ -933,8 +993,9 @@ function renderAccount(){
   $('acct').hidden = !sb;
   const btn = $('acctBtn');
   if(!me){ btn.innerHTML = 'Войти'; $('acctMenu').hidden = true; return; }
-  btn.innerHTML = `<span class="ava">${esc(me.username.slice(0,1).toUpperCase())}</span><span class="uname">${esc(me.username)}</span>`;
-  $('menuName').textContent = me.username; $('menuEmail').textContent = me.email || '';
+  btn.innerHTML = `<span class="ava">${esc(me.username.slice(0,1).toUpperCase())}</span><span class="uname">${esc(me.username)}</span>${me.elo!=null?`<span class="elo-chip">${me.elo}</span>`:''}`;
+  $('menuName').textContent = me.username;
+  $('menuEmail').textContent = (me.elo!=null ? `Эло ${me.elo} · ${me.wins||0} побед, ${me.losses||0} поражений · ` : '') + (me.email || '');
 }
 $('acctBtn').addEventListener('click', e => {
   e.stopPropagation();
@@ -948,6 +1009,7 @@ $('acctMenu').addEventListener('click', async e => {
   if(a==='logout'){ await sb.auth.signOut(); toast('Вы вышли из аккаунта'); }
   if(a==='mine'){ arena.filter='mine'; location.hash='#arena'; renderArena(); }
   if(a==='create') openCreate();
+  if(a==='rating') location.hash = '#rating';
 });
 
 async function setUser(user){
@@ -956,14 +1018,22 @@ async function setUser(user){
   me = {id:user.id, email:user.email, username:user.user_metadata?.username || (user.email||'игрок').split('@')[0]};
   renderAccount();
   for(let i=0;i<3;i++){ // профиль создаётся триггером, может появиться с задержкой
-    const {data} = await sb.from('profiles').select('username').eq('id',user.id).maybeSingle();
-    if(data){ me.username = data.username; break; }
+    if(await loadProfile()) break;
     await new Promise(r=>setTimeout(r,700));
   }
-  renderAccount(); onAuthChanged();
+  onAuthChanged();
   if(afterLogin){ const f=afterLogin; afterLogin=null; f(); }
 }
+async function loadProfile(){
+  if(!me) return false;
+  const {data} = await sb.from('profiles').select('username,elo,games,wins,losses').eq('id',me.id).maybeSingle();
+  if(!data) return false;
+  Object.assign(me, data); renderAccount();
+  if(state.view==='rating') loadRating();
+  return true;
+}
 function onAuthChanged(){
+  if(state.view==='rating') loadRating();
   if(state.view==='arena') loadArena();
   if(comp.c) refreshComp();
 }
@@ -1030,7 +1100,7 @@ async function loadArena(){
   if(!sb){ renderArena(); return; }
   const [r, m] = await Promise.all([
     sb.from('competitions')
-      .select('id,title,kind,symbols,start_balance,starts_at,ends_at,created_by,participants(count),competition_bots(count),creator:profiles!competitions_created_by_fkey(username)')
+      .select('id,title,kind,market,finalized_at,symbols,start_balance,starts_at,ends_at,created_by,participants(count),competition_bots(count),creator:profiles!competitions_created_by_fkey(username)')
       .order('starts_at',{ascending:false}).limit(200),
     me ? sb.from('participants').select('competition_id').eq('user_id',me.id) : Promise.resolve({data:[]}),
   ]);
@@ -1095,7 +1165,7 @@ function cardHTML(c){
   return `<article class="card">
     <div class="card-top">${pill}${cd}</div>
     <h3>${esc(c.title)}</h3>
-    <div class="coins">${c.symbols.map(s=>`<span class="coin">${base(s)}</span>`).join('')}</div>
+    <div class="coins">${c.symbols.map(s=>`<span class="coin">${base(s)}</span>`).join('')}${c.market==='futures'?'<span class="mkt fut">фьючерсы</span>':''}</div>
     <div class="card-meta"><span>⏱ <b>${fmtLen(durMin(c))}</b></span><span>Баланс <b>${fmtInt(c.start_balance)} $</b></span>${duel?'<span>⚔ <b>1 на 1</b></span>':`<span><b>${n}</b> ${plural(n,'участник','участника','участников')}</span>`}</div>
     <div class="card-foot"><span class="by">${joined?'<span class="badge-me">Вы участвуете</span>':'от '+esc(c.creator?.username||'игрока')}</span>${btn}</div>
   </article>`;
@@ -1148,8 +1218,10 @@ async function joinComp(id, btn){
 const DUR = [[5,'5 мин'],[15,'15 мин'],[30,'30 мин'],[60,'1 час'],[240,'4 часа'],[1440,'1 день'],[10080,'1 неделя']];
 const START = [[0,'Сразу'],[5,'Через 5 мин'],[15,'Через 15 мин'],[60,'Через час']];
 const BAL = [[1000,'1 000 $'],[10000,'10 000 $'],[100000,'100 000 $']];
-const cform = {syms:new Set(['BTCUSDT','ETHUSDT']), dur:15, start:0, bal:10000};
+const MARKETS = [['spot','Спот'],['futures','Фьючерсы, до 20x']];
+const cform = {syms:new Set(['BTCUSDT','ETHUSDT']), dur:15, start:0, bal:10000, market:'spot'};
 function renderCreateChips(){
+  $('cMarket').innerHTML = MARKETS.map(([v,l])=>`<button type="button" data-v="${v}" aria-pressed="${cform.market===v}">${l}</button>`).join('');
   $('cSyms').innerHTML = SYMBOLS.map(x=>`<button type="button" data-v="${x.s}" aria-pressed="${cform.syms.has(x.s)}">${x.b}</button>`).join('');
   $('cDur').innerHTML = DUR.map(([v,l])=>`<button type="button" data-v="${v}" aria-pressed="${cform.dur===v}">${l}</button>`).join('');
   $('cStart').innerHTML = START.map(([v,l])=>`<button type="button" data-v="${v}" aria-pressed="${cform.start===v}">${l}</button>`).join('');
@@ -1157,6 +1229,7 @@ function renderCreateChips(){
 }
 $('cSyms').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return;
   const v=b.dataset.v; if(cform.syms.has(v)){ if(cform.syms.size>1) cform.syms.delete(v); } else cform.syms.add(v); renderCreateChips(); });
+$('cMarket').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; cform.market=b.dataset.v; renderCreateChips(); });
 [['cDur','dur'],['cStart','start'],['cBal','bal']].forEach(([id,k])=>$(id).addEventListener('click', e=>{
   const b=e.target.closest('button'); if(!b) return; cform[k]=+b.dataset.v; renderCreateChips(); }));
 function openCreate(){
@@ -1173,7 +1246,7 @@ $('createForm').addEventListener('submit', async e => {
   go.disabled = true; msg.textContent = '';
   const {data, error} = await sb.rpc('create_competition', {
     p_title:title, p_symbols:[...cform.syms], p_start_balance:cform.bal,
-    p_starts_in_minutes:cform.start, p_duration_minutes:cform.dur});
+    p_starts_in_minutes:cform.start, p_duration_minutes:cform.dur, p_market:cform.market});
   go.disabled = false;
   if(error){ msg.textContent = errText(error); return; }
   $('dlgCreate').close(); e.target.title.value='';
@@ -1184,8 +1257,13 @@ $('createForm').addEventListener('submit', async e => {
 /* =====================================================================
    Режим соревнования
    ===================================================================== */
-const comp = {id:null, c:null, parts:[], pos:[], myTrades:[], final:null, poll:null, side:'buy', sellAll:false, busy:false, tab:'trade', lastStatus:null,
-              bot:null, botK:{}, botMeta:null, botKAt:0, summoning:false, summonAt:0, seenBot:false, seenPlayers:0};
+const comp = {id:null, c:null, parts:[], pos:[], myTrades:[], final:null, poll:null, side:'buy', lev:5, sellAll:false, busy:false, tab:'trade', lastStatus:null,
+              bot:null, botK:{}, botMeta:null, botKAt:0, summoning:false, summonAt:0, seenBot:false, seenPlayers:0,
+              results:null, finalizing:false, finalizeAt:0, botLogSeen:null, liqTried:{}, sim:null, simAt:0};
+window.__ta = {get comp(){ return comp; }, get state(){ return state; }, simBot: (...a)=>simBot(...a)};   // для отладки из консоли
+const FEE_F = 0.0005;                 // комиссия фьючерсов 0,05% от объёма
+const LEVS = [1,2,3,5,10,20];
+const isFut = () => comp.c?.market === 'futures';
 
 async function enterComp(id){
   if(!sb){ location.hash='#arena'; return; }
@@ -1195,9 +1273,13 @@ async function enterComp(id){
   if(comp.id!==id) return;
   if(error || !c){ toast(error?errText(error):'Соревнование не найдено', true); comp.id=null; location.hash='#arena'; return; }
   comp.c = c; comp.lastStatus = statusOf(c);
+  comp.side = c.market==='futures' ? 'long' : 'buy';
   if(!c.symbols.includes(state.sym)) state.sym = c.symbols[0];
   $('compBar').hidden = false; $('rtabs').hidden = false;
   $('cbTitle').textContent = c.kind==='duel' ? '⚔ '+c.title : c.title; document.title = c.title+' — Трейд Арена';
+  $('cbMarket').textContent = c.market==='futures' ? 'Фьючерсы · до 20x' : 'Спот';
+  $('cbMarket').className = 'mkt '+(c.market==='futures'?'fut':'');
+  setupTradeForm();
   setTab(comp.lastStatus==='done' ? 'board' : 'trade');
   watchKey=''; renderWatch(); clearTrades();
   load();
@@ -1207,92 +1289,207 @@ async function enterComp(id){
 function leaveComp(){
   clearInterval(comp.poll); comp.poll=null;
   Object.assign(comp, {id:null, c:null, parts:[], pos:[], myTrades:[], final:null, lastStatus:null,
-    bot:null, botK:{}, botMeta:null, botKAt:0, summoning:false, summonAt:0, seenBot:false, seenPlayers:0});
+    bot:null, botK:{}, botMeta:null, botKAt:0, summoning:false, summonAt:0, seenBot:false, seenPlayers:0,
+    results:null, finalizing:false, finalizeAt:0, botLogSeen:null, liqTried:{}, sim:null, simAt:0});
   $('compBar').hidden = true; $('rtabs').hidden = true;
   ['pTrade','pBoard'].forEach(id=>$(id).hidden=true); $('pFeed').hidden=false;
-  if(avgLine){ candles.removePriceLine(avgLine); avgLine=null; }
+  clearPriceLines(); candles.setMarkers([]);
   watchKey=''; renderWatch();
 }
 async function refreshComp(){
   const id = comp.id; if(!id || !comp.c) return;
-  const [cr, br, p, q, t] = await Promise.all([
+  const [cr, br, p, q, t, rr] = await Promise.all([
     sb.from('competitions').select('*').eq('id',id).maybeSingle(),
     sb.from('competition_bots').select('*').eq('competition_id',id).maybeSingle(),
-    sb.from('participants').select('user_id,cash,joined_at,profiles(username)').eq('competition_id',id),
-    sb.from('positions').select('user_id,symbol,qty,avg_price').eq('competition_id',id),
-    me ? sb.from('trades').select('symbol,side,qty,price,fee,created_at').eq('competition_id',id).eq('user_id',me.id).order('created_at',{ascending:false}).limit(30)
+    sb.from('participants').select('user_id,cash,joined_at,profiles(username,elo)').eq('competition_id',id),
+    sb.from('positions').select('user_id,symbol,qty,avg_price,side,leverage,margin').eq('competition_id',id),
+    me ? sb.from('trades').select('symbol,side,qty,price,fee,pnl,leverage,created_at').eq('competition_id',id).eq('user_id',me.id).order('created_at',{ascending:false}).limit(40)
        : Promise.resolve({data:[]}),
+    statusOf(comp.c)==='done' ? sb.from('competition_results').select('*').eq('competition_id',id) : Promise.resolve({data:null}),
   ]);
   if(id!==comp.id) return;
   if(!cr.error && cr.data) comp.c = cr.data;   // время старта схватки меняется, когда находится соперник
   if(!br.error) comp.bot = br.data || null;
   if(!p.error) comp.parts = p.data||[];
-  // уведомления: соперник найден / подключился бот
   const humans = comp.parts.length;
   if(comp.seenPlayers && humans>comp.seenPlayers && me && comp.parts.some(x=>x.user_id===me.id)) toast(comp.c.kind==='duel' ? 'Соперник найден! Схватка началась' : 'К соревнованию присоединился новый игрок');
   if(comp.bot && !comp.seenBot && comp.seenPlayers) toast(`${comp.bot.name} принял вызов!`);
   comp.seenPlayers = humans; comp.seenBot = !!comp.bot;
-  if(!q.error) comp.pos = q.data||[];
+  if(!q.error){
+    // ликвидировали мою позицию — сообщаем
+    if(me && comp.pos.length) comp.pos.filter(x=>x.user_id===me.id && x.margin!=null).forEach(x=>{
+      if(!(q.data||[]).some(y=>y.user_id===me.id && y.symbol===x.symbol)) {
+        const tr = (t.data||[]).find(z=>z.symbol===x.symbol && z.side==='liq');
+        if(tr && Date.now()-Date.parse(tr.created_at) < 20000) toast(`Позиция ${base(x.symbol)} ликвидирована`, true);
+      }});
+    comp.pos = q.data||[];
+  }
   if(!t.error) comp.myTrades = t.data||[];
+  if(rr.data && rr.data.length) comp.results = rr.data;
   if(statusOf(comp.c)==='done' && !comp.final) await loadFinalPrices();
   if(comp.bot && state.mode==='live'){
     const end = Date.parse(comp.c.ends_at), finished = comp.botMeta && comp.botMeta.cutoff>=end;
-    if(!finished && (!comp.botMeta || Date.now()-comp.botKAt > 20000)) await loadBotCandles();
+    if(!finished && (!comp.botMeta || Date.now()-comp.botKAt > 8000)) await loadBotCandles();
   }
-  renderComp(); updateAvgLine();
+  comp.simAt = 0;
+  await maybeFinalize();
+  renderComp(); updatePriceLines(); updateMarkers();
 }
 
-/* ---------- Бот: стратегия по свечам Binance ----------
-   Сделки бота не хранятся в базе: решения принимаются только по закрытым свечам,
-   а исполняются по цене открытия следующей свечи. Данные у всех одинаковые,
-   поэтому любой зритель видит тот же результат бота. */
-const BOT_STYLE = {trend:'по тренду', momentum:'импульс', contrarian:'против толпы', hodl:'купил и держит'};
-function botInterval(t0, end){ const D = (end-t0)/60000;
-  return D<=900 ? ['1m',60e3] : D<=4500 ? ['5m',300e3] : D<=13500 ? ['15m',900e3] : ['1h',3600e3]; }
+/* ---------- Итоги: фиксируем результат и пересчитываем Эло ---------- */
+async function maybeFinalize(){
+  const c = comp.c;
+  if(!c || statusOf(c)!=='done' || c.finalized_at || comp.results || !me || comp.finalizing) return;
+  if(Date.now()-comp.finalizeAt < 15000) return;
+  if(!comp.final || c.symbols.some(s=>!comp.final[s])) return;
+  let botEq = null;
+  if(comp.bot){
+    if(!comp.botMeta || comp.botMeta.cutoff < Date.parse(c.ends_at)) return;
+    const sim = simBot(true); if(!sim) return; botEq = Math.round(sim.eq*100)/100;
+  }
+  comp.finalizing = true; comp.finalizeAt = Date.now();
+  const {data, error} = await sb.rpc('finalize_competition', {p_competition:c.id, p_prices:comp.final, p_bot_equity:botEq});
+  comp.finalizing = false;
+  if(error){ console.warn('finalize', error); return; }
+  comp.results = data || [];
+  const mineR = comp.results.find(r=>r.user_id===me.id);
+  if(mineR && mineR.elo_after!==mineR.elo_before){
+    const d = mineR.elo_after-mineR.elo_before;
+    toast(`Рейтинг Эло: ${mineR.elo_before} → ${mineR.elo_after} (${d>0?'+':''}${d})`);
+  }
+  loadProfile();
+}
+
+/* ---------- Бот ----------
+   Бот торгует по общедоступным свечам Binance: для коротких схваток — по секундным свечам,
+   собранным в 10–15-секундные бары. Решение принимается по закрытому бару и исполняется
+   по цене открытия следующего; стоп-лосс и тейк-профит срабатывают по максимуму/минимуму бара.
+   Данные у всех одинаковые, поэтому любой зритель видит те же сделки и тот же результат. */
+const BOT_CFG = {
+  trend:      {lev:3, sl:.004,  tp:.009,  style:'по тренду (EMA 6/18)'},
+  scalper:    {lev:5, sl:.0015, tp:.0025, style:'скальпинг импульса'},
+  contrarian: {lev:2, sl:.006,  tp:.004,  style:'против толпы (RSI 10)'},
+  breakout:   {lev:4, sl:.003,  tp:.007,  style:'пробой диапазона'},
+  hodl:       {lev:1, sl:1,     tp:1e9,   style:'купил и держит'},
+};
+BOT_CFG.momentum = BOT_CFG.scalper;
+function botPlan(t0, end){ const D = (end-t0)/60000;
+  if(D<=15)   return {iv:'1s',  base:1e3,    bucket:10e3};
+  if(D<=60)   return {iv:'1s',  base:1e3,    bucket:15e3};
+  if(D<=600)  return {iv:'1m',  base:60e3,   bucket:60e3};
+  if(D<=3000) return {iv:'5m',  base:300e3,  bucket:300e3};
+  if(D<=9000) return {iv:'15m', base:900e3,  bucket:900e3};
+  return {iv:'1h', base:3600e3, bucket:3600e3};
+}
 async function loadBotCandles(){
   const c = comp.c, b = comp.bot, id = comp.id; if(!b) return;
   const t0 = Math.max(Date.parse(c.starts_at), Date.parse(b.joined_at)), end = Date.parse(c.ends_at);
   const t1 = Math.min(now(), end); if(t1<=t0) return;
-  const [iv, ms] = botInterval(t0, end), start = Math.floor(t0/ms)*ms - 30*ms, out = {};
+  const P = botPlan(t0, end), warm = Math.floor(t0/P.bucket)*P.bucket - 40*P.bucket;
+  if(!comp.botMeta || comp.botMeta.t0!==t0) comp.botK = {};
+  const out = {...comp.botK};
   await Promise.all(c.symbols.map(async s => {
-    try{ out[s] = await getJSON(`/api/v3/klines?symbol=${s}&interval=${iv}&startTime=${start}&endTime=${Math.floor(t1)}&limit=1000`); }catch(e){}
+    try{
+      let arr = out[s] ? out[s].slice(0,-1) : [];                // последнюю свечу перезапрашиваем — она могла быть неполной
+      let from = arr.length ? arr[arr.length-1][0] + P.base : warm;
+      for(let page=0; page<8 && from<=t1; page++){
+        const k = await getJSON(`/api/v3/klines?symbol=${s}&interval=${P.iv}&startTime=${from}&endTime=${Math.floor(t1)}&limit=1000`);
+        if(!k.length) break;
+        arr = arr.concat(k); from = k[k.length-1][0] + P.base;
+        if(k.length<1000) break;
+      }
+      out[s] = arr;
+    }catch(e){}
   }));
   if(id!==comp.id) return;
-  comp.botK = out; comp.botMeta = {t0, ms, cutoff:t1}; comp.botKAt = Date.now();
+  comp.botK = out; comp.botMeta = {t0, end, P, cutoff:t1}; comp.botKAt = Date.now(); comp.simAt = 0;
 }
-function simBot(){
+function simBot(force){
+  if(!force && comp.sim && Date.now()-comp.simAt < 900) return comp.sim;
   const b = comp.bot, m = comp.botMeta; if(!b || !m) return null;
-  const c = comp.c, syms = c.symbols, cap = +c.start_balance/syms.length, end = Date.parse(c.ends_at);
-  const tStart = Math.ceil(m.t0/m.ms)*m.ms, cutoff = statusOf(c)==='done' ? end : Math.min(now(), end);
-  let eq = 0, trades = 0; const held = [];
+  const c = comp.c, fut = c.market==='futures', cfg = BOT_CFG[b.strategy] || BOT_CFG.trend;
+  const strat = b.strategy==='momentum' ? 'scalper' : b.strategy;
+  const L = fut ? cfg.lev : 1, feeR = fut ? FEE_F : FEE;
+  const syms = c.symbols, cap = +c.start_balance/syms.length, end = m.end, B = m.P.bucket;
+  const tStart = Math.ceil(m.t0/B)*B, cutoff = statusOf(c)==='done' ? end : Math.min(now(), end);
+  let eq = 0; const held = [], log = [];
   for(const s of syms){
-    const k = comp.botK[s]; if(!k || !k.length){ eq += cap; continue; }
-    let cash = cap, qty = 0, pending = null, ef = null, es = null; const cl = [];
-    for(const r of k){
-      const ot = r[0], o = +r[1], close = +r[4];
-      if(pending && ot>=tStart && ot<end){
-        if(pending==='buy' && qty===0){ qty = cash*(1-FEE)/o; cash = 0; trades++; }
-        else if(pending==='sell' && qty>0){ cash = qty*o*(1-FEE); qty = 0; trades++; }
+    const raw = comp.botK[s]; if(!raw || !raw.length){ eq += cap; continue; }
+    const bk = [];
+    for(const r of raw){ const tt = Math.floor(r[0]/B)*B, o=+r[1], h=+r[2], l=+r[3], cl=+r[4], last = bk[bk.length-1];
+      if(last && last.t===tt){ if(h>last.h) last.h=h; if(l<last.l) last.l=l; last.c=cl; } else bk.push({t:tt,o,h,l,c:cl}); }
+    let cash = cap, pos = null, pending = null, ef = null, es = null, ag = null, al = null, prev = null;
+    const cls = [], hs = [], ls = [];
+    const open = (dir, px, tt) => { const margin = cash*0.95, notional = margin*L, fee = notional*feeR;
+      cash -= margin+fee; pos = {dir, entry:px, qty:notional/px, margin, t:tt};
+      log.push({t:tt, s, act: dir>0 ? (fut?'long':'buy') : 'short', px, lev:L}); };
+    const close = (px, tt, why) => { const pnl = pos.dir*(px-pos.entry)*pos.qty, fee = pos.qty*px*feeR;
+      cash += Math.max(0, pos.margin+pnl-fee); log.push({t:tt, s, act: fut?'close':'sell', px, pnl:pnl-fee, why, dir:pos.dir}); pos = null; };
+    for(const k of bk){
+      if(pending && k.t>=tStart && k.t<end){
+        if(pending==='close'){ if(pos) close(k.o, k.t, 'сигнал'); }
+        else { const dir = pending==='long' ? 1 : -1; if(pos && pos.dir!==dir) close(k.o, k.t, 'разворот'); if(!pos) open(dir, k.o, k.t); }
         pending = null;
       }
-      if(ot + m.ms > cutoff) break;          // незакрытая свеча — решений по ней нет
-      cl.push(close); if(cl.length>20) cl.shift();
-      ef = ef==null ? close : close*(2/6) + ef*(1-2/6);
-      es = es==null ? close : close*(2/14) + es*(1-2/14);
-      let sig = null, n = cl.length;
-      if(b.strategy==='hodl') sig = 'buy';
-      else if(b.strategy==='trend') sig = ef>es ? 'buy' : 'sell';
-      else if(b.strategy==='momentum' && n>=3) sig = cl[n-1]>cl[n-2] && cl[n-2]>cl[n-3] ? 'buy' : cl[n-1]<cl[n-2] && cl[n-2]<cl[n-3] ? 'sell' : null;
-      else if(b.strategy==='contrarian' && n>=8){ let g=0, l=0;
-        for(let i=n-7;i<n;i++){ const d = cl[i]-cl[i-1]; if(d>0) g+=d; else l-=d; }
-        const r7 = l===0 ? 100 : 100-100/(1+g/l); sig = r7<35 ? 'buy' : r7>60 ? 'sell' : null; }
-      pending = sig==='buy' && qty===0 ? 'buy' : sig==='sell' && qty>0 ? 'sell' : null;
+      if(k.t + B > cutoff) break;                        // бар ещё не закрыт — решений по нему нет
+      if(pos && k.t>=pos.t){
+        const liq = pos.dir>0 ? pos.entry*(1-0.9/L) : pos.entry*(1+0.9/L);
+        const sl = pos.dir>0 ? Math.max(pos.entry*(1-cfg.sl), liq) : Math.min(pos.entry*(1+cfg.sl), liq);
+        const tp = pos.dir>0 ? pos.entry*(1+cfg.tp) : pos.entry*(1-cfg.tp);
+        if(pos.dir>0 ? k.l<=sl : k.h>=sl) close(sl, k.t+B-1, 'стоп');
+        else if(pos.dir>0 ? k.h>=tp : k.l<=tp) close(tp, k.t+B-1, 'тейк');
+      }
+      cls.push(k.c); hs.push(k.h); ls.push(k.l); if(cls.length>40){ cls.shift(); hs.shift(); ls.shift(); }
+      ef = ef==null ? k.c : k.c*(2/7) + ef*(5/7);
+      es = es==null ? k.c : k.c*(2/19) + es*(17/19);
+      if(prev!=null){ const d = k.c-prev, g = Math.max(d,0), lo = Math.max(-d,0);
+        ag = ag==null ? g : (ag*9+g)/10; al = al==null ? lo : (al*9+lo)/10; }
+      prev = k.c;
+      const n = cls.length; let sig = null;
+      if(strat==='hodl') sig = 'long';
+      else if(strat==='trend' && n>=18){ const d = (ef-es)/es;
+        sig = d>0.0002 ? 'long' : d<-0.0002 ? 'short' : null;
+        if(!sig && pos && ((pos.dir>0 && d<0) || (pos.dir<0 && d>0))) sig = 'close'; }
+      else if(strat==='scalper' && n>=4){
+        const up = cls[n-1]>cls[n-2] && cls[n-2]>cls[n-3], dn = cls[n-1]<cls[n-2] && cls[n-2]<cls[n-3];
+        sig = up ? 'long' : dn ? 'short' : null; }
+      else if(strat==='contrarian' && n>=12 && al!=null){ const r = al===0 ? 100 : 100-100/(1+ag/al);
+        sig = r<30 ? 'long' : r>70 ? 'short' : (pos && pos.dir>0 && r>55) || (pos && pos.dir<0 && r<45) ? 'close' : null; }
+      else if(strat==='breakout' && n>=22){
+        const hh = Math.max(...hs.slice(n-21,n-1)), ll = Math.min(...ls.slice(n-21,n-1));
+        sig = k.c>hh ? 'long' : k.c<ll ? 'short' : null;
+        if(!sig && pos){ const h10 = Math.max(...hs.slice(n-11,n-1)), l10 = Math.min(...ls.slice(n-11,n-1));
+          if((pos.dir>0 && k.c<l10) || (pos.dir<0 && k.c>h10)) sig = 'close'; } }
+      if(!fut && sig==='short') sig = pos ? 'close' : null;          // на споте без шортов
+      if((sig==='long' && pos?.dir>0) || (sig==='short' && pos?.dir<0) || (sig==='close' && !pos)) sig = null;
+      pending = sig;
     }
-    const mark = priceOf(s) || +k[k.length-1][4];
-    eq += cash + qty*mark; if(qty>0) held.push(s);
+    const mark = priceOf(s) || bk[bk.length-1].c;
+    if(pos){ const pnl = pos.dir*(mark-pos.entry)*pos.qty; eq += cash + Math.max(0, pos.margin+pnl);
+      held.push({symbol:s, dir:pos.dir, lev:L, entry:pos.entry, pnl, margin:pos.margin}); }
+    else eq += cash;
   }
-  return {eq, held, trades};
+  log.sort((a,b)=>a.t-b.t);
+  comp.sim = {eq, held, log}; comp.simAt = Date.now();
+  return comp.sim;
 }
+function botActText(x){
+  const lev = x.lev>1 ? ' x'+x.lev : '';
+  return {long:'лонг'+lev, short:'шорт'+lev, buy:'покупка', sell:'продажа', close:'закрыл'}[x.act] || x.act;
+}
+function announceBotTrades(sim){
+  if(!sim || statusOf(comp.c)!=='live') { if(sim) comp.botLogSeen = sim.log.length; return; }
+  if(comp.botLogSeen==null){ comp.botLogSeen = sim.log.length; return; }
+  const fresh = sim.log.slice(comp.botLogSeen); comp.botLogSeen = sim.log.length;
+  const x = fresh.filter(z=>z.s===state.sym).pop() || fresh[fresh.length-1];
+  if(x && now()-x.t < 60000 && Date.now()-(comp.botToastAt||0) > 7000){
+    comp.botToastAt = Date.now();
+    const pnl = x.pnl!=null ? ` (${x.pnl>=0?'+':''}${fmtUsd(x.pnl)})` : '';
+    toast(`🤖 ${comp.bot.name.replace('Бот ','')}: ${botActText(x)} ${base(x.s)} по ${fmtP(x.px)}${pnl}`);
+    updateMarkers();
+  }
+}
+
 // Итоговые цены — закрытие минутной свечи в момент финиша (у всех одинаковые)
 async function loadFinalPrices(){
   const end = Date.parse(comp.c.ends_at), start = Math.floor((end-1)/60000)*60000, out = {};
@@ -1307,20 +1504,35 @@ function priceOf(s){
   const t = state.tickers[s]; if(t?.price) return t.price;
   const ps = comp.pos.filter(x=>x.symbol===s); return ps.length ? +ps[0].avg_price : 0;
 }
+const dirOf = p => p.side==='short' ? -1 : 1;
+const liqPrice = p => p.side==='short' ? p.avg_price*(1+0.9/p.leverage) : p.avg_price*(1-0.9/p.leverage);
+function posValue(p){   // сколько позиция стоит в капитале
+  const px = priceOf(p.symbol);
+  if(p.margin==null) return +p.qty*px;
+  return Math.max(0, +p.margin + dirOf(p)*(px - +p.avg_price)*+p.qty);
+}
+function posPnl(p){ const px = priceOf(p.symbol);
+  return p.margin==null ? (px - p.avg_price)*p.qty : dirOf(p)*(px - p.avg_price)*p.qty; }
+
 function standings(){
   const byUser = {};
   comp.pos.forEach(x => (byUser[x.user_id] ||= []).push(x));
   const sb0 = +comp.c.start_balance, started = now() >= Date.parse(comp.c.starts_at);
   const rows = comp.parts.map(p => {
     const pos = byUser[p.user_id] || [];
-    const inCoins = pos.reduce((a,x)=>a + +x.qty*priceOf(x.symbol), 0);
-    const eq = started ? +p.cash + inCoins : sb0;
-    return {id:p.user_id, name:p.profiles?.username || 'игрок', cash:+p.cash, eq, pnl:(eq/sb0-1)*100, pos, nPos:pos.length};
+    const eq = started ? +p.cash + pos.reduce((a,x)=>a + posValue(x), 0) : sb0;
+    return {id:p.user_id, name:p.profiles?.username || 'игрок', elo:p.profiles?.elo, cash:+p.cash, eq, pnl:(eq/sb0-1)*100, pos, nPos:pos.length};
   });
   if(comp.bot){
     const sim = started ? simBot() : null, eq = sim ? sim.eq : sb0;
-    rows.push({id:'bot', bot:true, name:comp.bot.name, style:BOT_STYLE[comp.bot.strategy]||'', eq, pnl:(eq/sb0-1)*100,
-               pos:(sim?.held||[]).map(s=>({symbol:s})), nPos:sim?.held.length||0, trades:sim?.trades||0});
+    rows.push({id:'bot', bot:true, name:comp.bot.name, elo:comp.bot.rating, style:(BOT_CFG[comp.bot.strategy]||{}).style||'', eq, pnl:(eq/sb0-1)*100,
+               held:sim?.held||[], pos:(sim?.held||[]).map(h=>({symbol:h.symbol})), nPos:sim?.held.length||0, log:sim?.log||[]});
+  }
+  // после подведения итогов места берём из базы
+  if(comp.results){
+    const by = Object.fromEntries(comp.results.map(r=>[r.is_bot?'bot':r.user_id, r]));
+    rows.forEach(r => { const x = by[r.id]; if(x){ r.eq = +x.equity; r.pnl = (r.eq/sb0-1)*100; r.place = x.place; r.eloBefore = x.elo_before; r.eloAfter = x.elo_after; } });
+    return rows.sort((a,b)=> (a.place||99)-(b.place||99) || b.eq-a.eq);
   }
   return rows.sort((a,b)=> b.eq-a.eq || a.name.localeCompare(b.name));
 }
@@ -1332,11 +1544,25 @@ function setTab(t){
 }
 $('rtabs').addEventListener('click', e => { const b=e.target.closest('button'); if(b) setTab(b.dataset.tab); });
 
+/* ---------- Ликвидации: браузеры участников следят за ценой ---------- */
+function watchLiquidations(){
+  if(!isFut() || statusOf(comp.c)!=='live' || state.mode!=='live' || !me || !comp.parts.some(p=>p.user_id===me.id)) return;
+  comp.pos.forEach(p => {
+    if(p.margin==null) return;
+    const px = state.tickers[p.symbol]?.price; if(!px) return;
+    const liq = liqPrice(p), hit = p.side==='short' ? px>=liq : px<=liq;
+    const key = p.user_id+p.symbol;
+    if(hit && Date.now()-(comp.liqTried[key]||0) > 15000){
+      comp.liqTried[key] = Date.now();
+      sb.rpc('liquidate_position', {p_competition:comp.id, p_user:p.user_id, p_symbol:p.symbol, p_price:px}).then(({data}) => { if(data) refreshComp(); });
+    }
+  });
+}
+
 function renderComp(){
   if(!comp.c) return;
   const c = comp.c, st = statusOf(c), rows = standings();
   const myIdx = me ? rows.findIndex(r=>r.id===me.id) : -1, mine = myIdx>=0 ? rows[myIdx] : null;
-  // Игрок один дольше 3 минут — зовём бота (сервер сам проверит условия)
   const myPart = me && comp.parts.find(p=>p.user_id===me.id);
   comp.botAt = myPart && comp.parts.length===1 && !comp.bot && st!=='done' ? Date.parse(myPart.joined_at)+180e3 : null;
   if(comp.botAt && now()>=comp.botAt && !comp.summoning && !comp.cancelling && Date.now()-comp.summonAt>8000){
@@ -1344,12 +1570,13 @@ function renderComp(){
     sb.rpc('summon_bot', {p_competition:comp.id}).then(() => { comp.summoning = false; refreshComp(); });
   }
   const waitingDuel = c.kind==='duel' && st==='soon' && comp.parts.length + (comp.bot?1:0) < 2;
-  if(comp.lastStatus && comp.lastStatus!==st){ // смена этапа: старт или финиш
+  if(comp.lastStatus && comp.lastStatus!==st){
     comp.lastStatus = st;
     if(st==='live') toast('Старт! Соревнование началось');
     if(st==='done'){ toast('Финиш! Подводим итоги'); setTab('board'); refreshComp(); }
   }
-  // Верхняя панель
+  watchLiquidations();
+  if(comp.bot) announceBotTrades(rows.find(r=>r.bot) ? comp.sim : null);
   const pill = $('cbPill');
   pill.className = 'pill '+(waitingDuel?'vs':st); pill.textContent = waitingDuel ? 'Поиск соперника' : {live:'Идёт',soon:'Скоро',done:'Завершено'}[st];
   $('cbTimerLabel').textContent = waitingDuel ? 'Бот подключится через' : {live:'До финиша',soon:'До старта',done:'Финиш'}[st];
@@ -1360,29 +1587,55 @@ function renderComp(){
   if(mine){
     $('cbEq').textContent = fmtUsd(mine.eq);
     $('cbPnl').textContent = fmtPct(mine.pnl); $('cbPnl').className = mine.pnl>=0?'up':'down';
-    $('cbRank').textContent = `${myIdx+1} из ${rows.length}`;
+    $('cbRank').textContent = `${mine.place||myIdx+1} из ${rows.length}`;
   }
   renderBoard(rows, st);
   renderTrade(mine, st, waitingDuel);
   tick();
 }
 function renderBoard(rows, st){
-  $('boardList').innerHTML = rows.length ? rows.map((r,i)=>`
-    <div class="b-row${me&&r.id===me.id?' me':''}">
-      <span class="b-rank">${i+1}</span>
+  $('boardList').innerHTML = rows.length ? rows.map((r,i)=>{
+    const d = r.eloAfter!=null ? r.eloAfter - r.eloBefore : null;
+    const eloTxt = r.bot ? `Эло ${r.elo}` : d!=null && !r.bot ? `Эло ${r.eloAfter} <b class="${d>=0?'up':'down'}">${d>0?'+':''}${d}</b>` : r.elo!=null ? `Эло ${r.elo}` : '';
+    const posTxt = r.bot ? (r.held.length ? r.held.map(h=>`${h.dir>0?(isFut()?'лонг':'в') :'шорт'} ${base(h.symbol)}${h.lev>1?' x'+h.lev:''}`).join(', ') : 'без позиции')
+                 : r.nPos ? r.pos.map(x=>x.margin!=null ? `${x.side==='short'?'шорт':'лонг'} ${base(x.symbol)} x${x.leverage}` : base(x.symbol)).join(', ') : 'только USDT';
+    return `<div class="b-row${me&&r.id===me.id?' me':''}">
+      <span class="b-rank">${r.place||i+1}</span>
       <span class="b-name">${esc(r.name)}${r.bot?'<span class="tag-bot">бот</span>':''}${me&&r.id===me.id?'<small>вы</small>':''}</span>
       <span class="b-eq">${fmtUsd(r.eq)}</span>
-      <span class="b-sub">${r.bot ? esc(r.style)+' · ' : ''}${r.nPos ? r.pos.map(x=>base(x.symbol)).join(', ') : 'только USDT'}</span>
+      <span class="b-sub">${eloTxt ? eloTxt+' · ' : ''}${r.bot ? esc(r.style)+' · ' : ''}${posTxt}</span>
       <span class="b-pnl ${r.pnl>=0?'up':'down'}">${fmtPct(r.pnl)}</span>
-    </div>`).join('') : '<div class="empty-s" style="padding:10px 8px">Участников пока нет</div>';
-  $('boardNote').textContent = (comp.bot ? `${comp.bot.name} торгует сам: ${BOT_STYLE[comp.bot.strategy]}. ` : '') + (st==='done'
-    ? (Object.keys(comp.final||{}).length ? 'Итог посчитан по ценам Binance на момент финиша.' : 'Итог посчитан по последним доступным ценам.')
-    : st==='soon' ? 'До старта у всех одинаковый баланс.' : 'Капитал = деньги + монеты по текущей цене. Обновляется вживую.');
+    </div>`; }).join('') : '<div class="empty-s" style="padding:10px 8px">Участников пока нет</div>';
+  const botRow = rows.find(r=>r.bot);
+  $('botLogWrap').hidden = !botRow;
+  if(botRow){
+    $('botLogTitle').textContent = `Сделки: ${comp.bot.name}`;
+    const L = botRow.log.slice(-12).reverse();
+    $('botLog').innerHTML = L.length ? L.map(x=>`<div class="mini-row num">
+      <span class="${x.act==='long'||x.act==='buy'?'up':x.act==='short'?'down':''}">${botActText(x)} ${base(x.s)}${x.why?' · '+x.why:''}</span>
+      <span class="r ${x.pnl==null?'sub':x.pnl>=0?'up':'down'}">${x.pnl==null?'вход':(x.pnl>=0?'+':'')+fmtUsd(x.pnl)}</span>
+      <span class="sub">по ${fmtP(x.px)}</span><span class="r sub">${fmtTime(x.t)}</span></div>`).join('')
+      : `<div class="empty-s">${st==='soon'?'Бот ждёт старта':'Бот присматривается к рынку…'}</div>`;
+  }
+  $('boardNote').textContent = st==='done'
+    ? (comp.results ? 'Итог зафиксирован по ценам Binance на момент финиша. Рейтинг Эло обновлён.' : 'Подводим итоги…')
+    : st==='soon' ? 'До старта у всех одинаковый баланс.' : 'Капитал = деньги + позиции по текущей цене. Обновляется вживую.';
+}
+
+/* ---------- Торговая панель: спот и фьючерсы ---------- */
+function setupTradeForm(){
+  const fut = isFut();
+  $('tpSideBuy').dataset.side = fut ? 'long' : 'buy';  $('tpSideBuy').textContent = fut ? 'Лонг' : 'Купить';
+  $('tpSideSell').dataset.side = fut ? 'short' : 'sell'; $('tpSideSell').textContent = fut ? 'Шорт' : 'Продать';
+  document.querySelectorAll('.sidesw button').forEach(x=>x.setAttribute('aria-pressed', x.dataset.side===comp.side));
+  $('tpLevWrap').hidden = !fut;
+  $('tpLev').innerHTML = LEVS.map(l=>`<button type="button" data-l="${l}" aria-pressed="${comp.lev===l}">${l}x</button>`).join('');
+  $('tpAmtLabel').textContent = fut ? 'Маржа, USDT' : 'Сумма, USDT';
+  $('tpAmt').value=''; $('tpMsg').textContent='';
 }
 function renderTrade(mine, st, waitingDuel){
-  const s = state.sym, price = priceOf(s), b = base(s);
-  const myPos = mine?.pos.find(x=>x.symbol===s), posQty = myPos ? +myPos.qty : 0;
-  // Состояние: кто может торговать
+  const s = state.sym, price = priceOf(s), b = base(s), fut = isFut();
+  const myPos = mine?.pos.find(x=>x.symbol===s) || null, posQty = myPos ? +myPos.qty : 0;
   let msg = '', btn = '';
   if(!me){ msg = 'Войдите, чтобы участвовать и торговать.'; btn = '<button class="btn primary" data-a="login">Войти или зарегистрироваться</button>'; }
   else if(!mine && st!=='done'){ msg = `Вы ещё не участвуете. Стартовый баланс — ${fmtInt(comp.c.start_balance)} $.`; btn = '<button class="btn primary" data-a="join">Участвовать</button>'; }
@@ -1391,44 +1644,88 @@ function renderTrade(mine, st, waitingDuel){
       + (comp.botAt ? ` <span class="wait-note">Если никто не присоединится, через <b class="num" data-cd="${comp.botAt}"></b> подключится бот.</span>` : ''); }
   else if(st==='live' && comp.botAt && state.mode==='live'){ msg = `<span class="wait-note">Вы пока один. Если никто не присоединится, через <b class="num" data-cd="${comp.botAt}"></b> подключится бот.</span>`;
     if(canCancelDuel()) btn = '<button class="btn" data-a="cancel">Отменить схватку</button>'; }
-  else if(st==='done'){ msg = mine ? `Соревнование завершено. Ваш результат: <b>${fmtUsd(mine.eq)}</b> (${fmtPct(mine.pnl)}).` : 'Соревнование завершено.'; btn = '<button class="btn" data-a="board">Смотреть рейтинг</button>'; }
+  else if(st==='done'){
+    const r = mine && comp.results?.find(x=>x.user_id===me.id);
+    const d = r ? r.elo_after-r.elo_before : null;
+    msg = mine ? `Соревнование завершено. Ваш результат: <b>${fmtUsd(mine.eq)}</b> (${fmtPct(mine.pnl)})${r?`, место ${r.place}. Эло: ${r.elo_before} → <b class="${d>=0?'up':'down'}">${r.elo_after}</b>`:''}.` : 'Соревнование завершено.';
+    btn = '<button class="btn" data-a="board">Смотреть итоги</button>'; }
   else if(state.mode==='demo'){ msg = 'Нет связи с Binance: без реальных цен торговать нельзя. Обновите страницу позже.'; }
   const html = msg + (btn?'<br>'+btn:'');
-  if($('tpState').querySelector('[data-sure]')) { /* ждём второго нажатия — не трогаем кнопку */ }
+  if($('tpState').querySelector('[data-sure]')) {}
   else if($('tpState').dataset.html !== html){ $('tpState').innerHTML = html; $('tpState').dataset.html = html; }
-  $('tpState').hidden = !msg; tick();
+  $('tpState').hidden = !msg;
   const can = !!mine && st==='live' && state.mode==='live';
   $('tpForm').hidden = !mine || st==='done' || !!waitingDuel;
   $('tpForm').querySelectorAll('button,input').forEach(x=>{ if(x.closest('.sidesw')) return; x.disabled = !can || comp.busy; });
-  // Значения формы
+  // при открытой фьючерсной позиции плечо фиксировано
+  if(fut && myPos && myPos.margin!=null && comp.lev!==myPos.leverage){ comp.lev = myPos.leverage; $('tpLev').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', +x.dataset.l===comp.lev)); }
+  $('tpLev').querySelectorAll('button').forEach(x=>{ if(fut && myPos && myPos.margin!=null) x.disabled = x.disabled || +x.dataset.l!==myPos.leverage; });
   const cash = mine ? mine.cash : +comp.c.start_balance;
   $('tpCash').textContent = fmtUsd(cash);
+  $('tpPosRow').hidden = fut;
   $('tpPosLabel').textContent = `В позиции ${b}`;
   $('tpPos').textContent = posQty ? `${fmtQ(posQty)} ≈ ${fmtUsd(posQty*price)}` : '0';
   $('tpPrice').textContent = price ? fmtP(price)+' $' : '—';
   const go = $('tpGo');
-  go.className = 'act '+comp.side; go.textContent = (comp.side==='buy'?'Купить ':'Продать ')+b;
+  if(fut){ go.className = 'act '+(comp.side==='long'?'buy':'sell'); go.textContent = `${comp.side==='long'?'Открыть лонг':'Открыть шорт'} ${b} x${comp.lev}`; }
+  else { go.className = 'act '+comp.side; go.textContent = (comp.side==='buy'?'Купить ':'Продать ')+b; }
   updateEstimate();
-  // Позиции
+  // карточка открытой фьючерсной позиции по выбранной монете
+  const fp = $('tpFPos');
+  if(fut && myPos && myPos.margin!=null && st==='live'){
+    const pnl = posPnl(myPos), roe = pnl/myPos.margin*100;
+    if(!fp.dataset.ready){   // каркас строим один раз, дальше меняем только текст — кнопки не пересоздаются
+      fp.innerHTML = `<div class="fpos-h"><b data-f="side"></b><span data-f="info"></span></div>
+        <div class="kv"><span>Вход</span><b data-f="entry"></b></div>
+        <div class="kv"><span>Ликвидация</span><b class="down" data-f="liq"></b></div>
+        <div class="kv"><span>Маржа</span><b data-f="margin"></b></div>
+        <div class="kv"><span>PnL</span><b data-f="pnl"></b></div>
+        <div class="fpos-a"><button class="btn sm" data-close="0.5">Закрыть 50%</button><button class="btn sm primary" data-close="1">Закрыть всё</button></div>`;
+      fp.dataset.ready = '1';
+    }
+    const f = k => fp.querySelector(`[data-f="${k}"]`);
+    fp.hidden = false;
+    fp.className = 'fpos '+(myPos.side==='short'?'short':'long');
+    f('side').textContent = `${myPos.side==='short'?'ШОРТ':'ЛОНГ'} x${myPos.leverage}`;
+    f('info').textContent = `${b} · ${fmtQ(myPos.qty)}`;
+    f('entry').textContent = fmtP(myPos.avg_price);
+    f('liq').textContent = fmtP(liqPrice(myPos));
+    f('margin').textContent = fmtUsd(myPos.margin);
+    f('pnl').textContent = `${pnl>=0?'+':''}${fmtUsd(pnl)} (${fmtPct(roe)})`; f('pnl').className = pnl>=0?'up':'down';
+    fp.querySelectorAll('button').forEach(x=>x.disabled = !can || comp.busy);
+  } else fp.hidden = true;
+  // все позиции
   $('tpPositions').innerHTML = mine && mine.pos.length ? mine.pos.map(x=>{
+    if(x.margin!=null){ const pnl = posPnl(x), roe = pnl/x.margin*100;
+      return `<div class="mini-row num"><span class="${x.side==='short'?'down':'up'}">${x.side==='short'?'Шорт':'Лонг'} ${base(x.symbol)} x${x.leverage}</span><span class="r ${pnl>=0?'up':'down'}">${pnl>=0?'+':''}${fmtUsd(pnl)}</span>
+        <span class="sub">вход ${fmtP(x.avg_price)} · ликв. ${fmtP(liqPrice(x))}</span><span class="r ${roe>=0?'up':'down'}">${fmtPct(roe)}</span></div>`; }
     const p = priceOf(x.symbol), val = +x.qty*p, pnl = (p/x.avg_price-1)*100;
     return `<div class="mini-row num"><span>${base(x.symbol)} · ${fmtQ(x.qty)}</span><span class="r">${fmtUsd(val)}</span>
       <span class="sub">вход ${fmtP(x.avg_price)}</span><span class="r ${pnl>=0?'up':'down'}">${fmtPct(pnl)}</span></div>`; }).join('')
     : '<div class="empty-s">Нет открытых позиций</div>';
-  // Сделки
-  $('tpTrades').innerHTML = comp.myTrades.length ? comp.myTrades.slice(0,15).map(x=>`
-    <div class="mini-row num"><span class="${x.side==='buy'?'up':'down'}">${x.side==='buy'?'Покупка':'Продажа'} ${base(x.symbol)}</span><span class="r">${fmtUsd(x.qty*x.price)}</span>
-    <span class="sub">${fmtQ(x.qty)} по ${fmtP(x.price)}</span><span class="r sub">${fmtTime(Date.parse(x.created_at))}</span></div>`).join('')
+  const SIDE = {buy:'Покупка', sell:'Продажа', long:'Лонг', short:'Шорт', close:'Закрытие', liq:'Ликвидация'};
+  $('tpTrades').innerHTML = comp.myTrades.length ? comp.myTrades.slice(0,15).map(x=>{
+    const cls = x.side==='buy'||x.side==='long' ? 'up' : x.side==='close' ? '' : 'down';
+    const right = x.pnl!=null ? `<span class="r ${x.pnl>=0?'up':'down'}">${x.pnl>=0?'+':''}${fmtUsd(x.pnl)}</span>` : `<span class="r">${fmtUsd(x.qty*x.price)}</span>`;
+    return `<div class="mini-row num"><span class="${cls}">${SIDE[x.side]||x.side} ${base(x.symbol)}${x.leverage>1?' x'+x.leverage:''}</span>${right}
+    <span class="sub">${fmtQ(x.qty)} по ${fmtP(x.price)}</span><span class="r sub">${fmtTime(Date.parse(x.created_at))}</span></div>`; }).join('')
     : '<div class="empty-s">Сделок пока нет</div>';
 }
 function myState(){
   const mine = me && comp.parts.find(p=>p.user_id===me.id);
   const pos = mine && comp.pos.find(x=>x.user_id===me.id && x.symbol===state.sym);
-  return {cash: mine ? +mine.cash : 0, posQty: pos ? +pos.qty : 0, price: priceOf(state.sym)};
+  return {cash: mine ? +mine.cash : 0, pos, posQty: pos ? +pos.qty : 0, price: priceOf(state.sym)};
 }
 const parseAmt = v => { const n = parseFloat(String(v).replace(/\s/g,'').replace(',','.')); return isFinite(n) ? n : 0; };
 function updateEstimate(){
   const {price, posQty} = myState(), amt = parseAmt($('tpAmt').value);
+  if(isFut()){
+    if(!price || !amt){ $('tpEst').textContent = `Плечо x${comp.lev} · комиссия 0,05% от объёма`; return; }
+    const notional = amt*comp.lev, qty = notional/price;
+    const liq = comp.side==='long' ? price*(1-0.9/comp.lev) : price*(1+0.9/comp.lev);
+    $('tpEst').textContent = `Позиция ${fmtUsd(notional)} ≈ ${fmtQ(qty)} ${base(state.sym)} · ликвидация ≈ ${fmtP(liq)} · комиссия ${fmtUsd(notional*FEE_F)}`;
+    return;
+  }
   if(!price || !amt){ $('tpEst').textContent = 'Комиссия 0,1%'; return; }
   const qty = comp.side==='sell' && comp.sellAll ? posQty : amt/price;
   $('tpEst').textContent = `≈ ${fmtQ(qty)} ${base(state.sym)} · комиссия ${fmtUsd(qty*price*FEE)}`;
@@ -1436,12 +1733,16 @@ function updateEstimate(){
 $('tpForm').querySelector('.sidesw').addEventListener('click', e => { const b=e.target.closest('button'); if(!b) return;
   comp.side = b.dataset.side; comp.sellAll=false; $('tpAmt').value=''; $('tpMsg').textContent='';
   document.querySelectorAll('.sidesw button').forEach(x=>x.setAttribute('aria-pressed', x===b)); renderComp(); });
+$('tpLev').addEventListener('click', e => { const b=e.target.closest('button'); if(!b||b.disabled) return;
+  comp.lev = +b.dataset.l; $('tpLev').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', x===b)); renderComp(); });
 $('tpAmt').addEventListener('input', ()=>{ comp.sellAll=false; updateEstimate(); });
 $('tpPcts').addEventListener('click', e => { const b=e.target.closest('button'); if(!b) return;
   const pct = +b.dataset.p/100, {cash, posQty, price} = myState(); let v;
-  if(comp.side==='buy') v = Math.floor(cash*pct/(1+FEE)*100)/100;
+  if(isFut()) v = Math.floor(cash*pct/(1+comp.lev*FEE_F)*100)/100;
+  else if(comp.side==='buy') v = Math.floor(cash*pct/(1+FEE)*100)/100;
   else { v = Math.floor(posQty*price*pct*100)/100; comp.sellAll = pct===1; }
   $('tpAmt').value = v>0 ? String(v).replace('.',',') : ''; updateEstimate(); });
+$('tpFPos').addEventListener('click', e => { const b=e.target.closest('button[data-close]'); if(b && !b.disabled) closeFutures(+b.dataset.close); });
 $('tpState').addEventListener('click', e => { const a = e.target.closest('button')?.dataset.a;
   if(a==='login'){ afterLogin = null; openAuth('up'); }
   if(a==='join') joinComp(comp.id, e.target);
@@ -1472,10 +1773,23 @@ $('tpAmt').addEventListener('keydown', e => { if(e.key==='Enter') placeOrder(); 
 
 async function placeOrder(){
   if(comp.busy) return;
-  const msg = $('tpMsg'), {cash, posQty, price} = myState(), amt = parseAmt($('tpAmt').value), s = state.sym;
+  const msg = $('tpMsg'), {cash, pos, posQty, price} = myState(), amt = parseAmt($('tpAmt').value), s = state.sym;
   const fail = t => { msg.className='tp-msg down'; msg.textContent=t; };
   if(state.mode!=='live') return fail('Нет живых цен Binance');
   if(!price) return fail('Цена ещё не загрузилась');
+  if(isFut()){
+    if(amt < 1) return fail('Минимальная маржа — 1 $');
+    if(amt*(1+comp.lev*FEE_F) > cash + 1e-6) return fail('Недостаточно средств (учтите комиссию)');
+    if(pos && pos.margin!=null && pos.side!==comp.side) return fail(`Сначала закройте ${pos.side==='short'?'шорт':'лонг'} по ${base(s)}`);
+    comp.busy = true; renderComp(); msg.className='tp-msg muted'; msg.textContent='Отправка…';
+    const {data, error} = await sb.rpc('place_futures', {p_competition:comp.id, p_symbol:s, p_action:comp.side, p_margin:amt, p_leverage:comp.lev, p_price:price});
+    comp.busy = false;
+    if(error){ fail(errText(error)); renderComp(); return; }
+    msg.className='tp-msg up';
+    msg.textContent = `${comp.side==='long'?'Лонг':'Шорт'} ${base(s)} x${comp.lev} открыт по ${fmtP(data.price)}`;
+    $('tpAmt').value='';
+    await refreshComp(); return;
+  }
   let qty;
   if(comp.side==='buy'){
     if(amt < 1) return fail('Минимальная сумма — 1 $');
@@ -1496,18 +1810,99 @@ async function placeOrder(){
   $('tpAmt').value=''; comp.sellAll=false;
   await refreshComp();
 }
-function updateAvgLine(){
-  if(avgLine){ candles.removePriceLine(avgLine); avgLine=null; }
-  if(!comp.c || !me) return;
-  const p = comp.pos.find(x=>x.user_id===me.id && x.symbol===state.sym);
-  if(p) avgLine = candles.createPriceLine({price:+p.avg_price, color:C.ma, lineWidth:1, lineStyle:2, axisLabelVisible:true, title:'вход'});
+async function closeFutures(fraction){
+  if(comp.busy) return;
+  const msg = $('tpMsg'), {pos, price} = myState(), s = state.sym;
+  if(!pos || !price) return;
+  comp.busy = true; renderComp();
+  const {data, error} = await sb.rpc('place_futures', {p_competition:comp.id, p_symbol:s, p_action:'close', p_margin:null, p_leverage:null, p_price:price, p_fraction:fraction});
+  comp.busy = false;
+  if(error){ msg.className='tp-msg down'; msg.textContent = errText(error); renderComp(); return; }
+  const pnl = +data.pnl;
+  msg.className = 'tp-msg '+(pnl>=0?'up':'down');
+  msg.textContent = `${fraction<1?'Закрыто 50%':'Позиция закрыта'} по ${fmtP(data.price)}: ${pnl>=0?'+':''}${fmtUsd(pnl)}`;
+  await refreshComp();
 }
+
+/* ---------- Линии входа/ликвидации и отметки сделок на графике ---------- */
+let priceLines = [];
+function clearPriceLines(){ priceLines.forEach(l=>candles.removePriceLine(l)); priceLines = []; }
+function updatePriceLines(){
+  clearPriceLines();
+  if(!comp.c || !me) return;
+  const p = comp.pos.find(x=>x.user_id===me.id && x.symbol===state.sym); if(!p) return;
+  priceLines.push(candles.createPriceLine({price:+p.avg_price, color:C.ma, lineWidth:1, lineStyle:2, axisLabelVisible:true, title:'вход'}));
+  if(p.margin!=null) priceLines.push(candles.createPriceLine({price:liqPrice(p), color:C.down, lineWidth:1, lineStyle:1, axisLabelVisible:true, title:'ликвидация'}));
+}
+function updateMarkers(){
+  if(!comp.c || !state.bars.length){ candles.setMarkers([]); return; }
+  const ivSec = INTERVALS.find(x=>x[0]===state.iv)[2], times = new Set(state.bars.map(b=>b.time));
+  const toBar = ms => Math.floor(ms/1000/ivSec)*ivSec + TZ;
+  const mk = [];
+  comp.myTrades.filter(x=>x.symbol===state.sym).forEach(x => {
+    const long = x.side==='buy'||x.side==='long';
+    mk.push({time:toBar(Date.parse(x.created_at)), position: long?'belowBar':'aboveBar', color: x.side==='liq'?C.down:C.ma,
+             shape: x.side==='close'||x.side==='sell' ? 'circle' : x.side==='liq' ? 'square' : long?'arrowUp':'arrowDown',
+             text: x.side==='liq' ? 'ликв.' : 'вы'});
+  });
+  (comp.sim?.log||[]).filter(x=>x.s===state.sym).forEach(x => {
+    const long = x.act==='long'||x.act==='buy';
+    mk.push({time:toBar(x.t), position: long?'belowBar':'aboveBar', color:C.ema,
+             shape: x.act==='close'||x.act==='sell' ? 'circle' : long?'arrowUp':'arrowDown', text:'бот'});
+  });
+  candles.setMarkers(mk.filter(m=>times.has(m.time)).sort((a,b)=>a.time-b.time).slice(-150));
+}
+
 $('cbShare').addEventListener('click', async () => {
   const url = location.origin+location.pathname+'#c/'+comp.id;
   try{ if(navigator.share) await navigator.share({title:comp.c.title, text:'Соревнование по трейдингу — присоединяйся!', url});
        else { await navigator.clipboard.writeText(url); toast('Ссылка скопирована'); } }
   catch(e){ try{ await navigator.clipboard.writeText(url); toast('Ссылка скопирована'); }catch(_){ prompt('Ссылка на соревнование:', url); } }
 });
+
+/* =====================================================================
+   Рейтинг Эло
+   ===================================================================== */
+async function loadRating(){
+  const body = $('ratingBody');
+  if(!sb){ body.innerHTML = '<div class="setup"><b>База данных ещё не подключена.</b></div>'; return; }
+  if(!body.dataset.loaded) body.innerHTML = '<div class="empty">Загрузка рейтинга…</div>';
+  const [top, hist] = await Promise.all([
+    sb.from('profiles').select('id,username,elo,games,wins,losses').gt('games',0).order('elo',{ascending:false}).order('games',{ascending:false}).limit(100),
+    me ? sb.from('competition_results').select('competition_id,place,equity,elo_before,elo_after,competitions(title,kind,market,ends_at,start_balance)').eq('user_id',me.id).limit(50)
+       : Promise.resolve({data:[]}),
+  ]);
+  if(state.view!=='rating') return;
+  if(top.error){ body.innerHTML = `<div class="empty"><b>Не удалось загрузить рейтинг</b>${esc(errText(top.error))}</div>`; return; }
+  body.dataset.loaded = '1';
+  (top.data||[]).sort((a,b)=>b.elo-a.elo || b.games-a.games);
+  const rows = top.data||[], myPlace = me ? rows.findIndex(r=>r.id===me.id) : -1;
+  let html = '';
+  if(me){
+    const wr = me.games ? Math.round(me.wins/me.games*100) : 0;
+    html += `<div class="me-card">
+      <div class="rule"><span>Ваш рейтинг</span><b class="elo">${me.elo ?? 1000}</b></div>
+      <div class="rule"><span>Место</span><b>${myPlace>=0 ? myPlace+1 : '—'}</b></div>
+      <div class="rule"><span>Игр</span><b>${me.games||0}</b></div>
+      <div class="rule"><span>Побед / поражений</span><b><span class="up">${me.wins||0}</span> / <span class="down">${me.losses||0}</span></b></div>
+      <div class="rule"><span>Процент побед</span><b>${wr}%</b></div></div>`;
+  }
+  html += rows.length ? `<table class="rtable"><thead><tr><th>#</th><th>Игрок</th><th>Эло</th><th>Игр</th><th>Победы</th><th>Поражения</th><th>% побед</th></tr></thead><tbody>
+    ${rows.map((r,i)=>`<tr class="${me&&r.id===me.id?'me':''}"><td class="rank-${i+1}">${i+1}</td><td>${esc(r.username)}${me&&r.id===me.id?' <small class="badge-me">вы</small>':''}</td>
+      <td class="elo">${r.elo}</td><td>${r.games}</td><td class="up">${r.wins}</td><td class="down">${r.losses}</td><td>${r.games?Math.round(r.wins/r.games*100):0}%</td></tr>`).join('')}
+    </tbody></table>`
+    : `<div class="empty"><b>Рейтинг пока пуст</b>Сыграйте первую схватку: после финиша здесь появятся игроки.</div>`;
+  const H = (hist.data||[]).filter(x=>x.competitions).sort((a,b)=>Date.parse(b.competitions.ends_at)-Date.parse(a.competitions.ends_at)).slice(0,15);
+  if(me && H.length){
+    html += `<div class="hist"><h3>Мои последние игры</h3><table class="rtable"><thead><tr><th>Дата</th><th>Соревнование</th><th>Место</th><th>Капитал</th><th>Результат</th><th>Эло</th></tr></thead><tbody>
+      ${H.map(x=>{ const d = x.elo_after-x.elo_before, pnl = (x.equity/x.competitions.start_balance-1)*100;
+        return `<tr><td>${fmtDate(Date.parse(x.competitions.ends_at))}</td><td><a href="#c/${x.competition_id}" style="color:inherit">${esc(x.competitions.title)}</a></td>
+        <td>${x.place}</td><td>${fmtUsd(x.equity)}</td><td class="${pnl>=0?'up':'down'}">${fmtPct(pnl)}</td>
+        <td class="${d>0?'up':d<0?'down':''}">${x.elo_after} (${d>0?'+':''}${d})</td></tr>`; }).join('')}
+      </tbody></table></div>`;
+  }
+  body.innerHTML = html;
+}
 
 /* =====================================================================
    Таймеры и навигация
@@ -1530,13 +1925,16 @@ function setView(v){
   state.view = v; document.body.dataset.view = v;
   $('navChart').setAttribute('aria-current', v==='chart' ? 'page' : 'false');
   $('navArena').setAttribute('aria-current', v==='arena' || comp.c ? 'page' : 'false');
+  $('navRating').setAttribute('aria-current', v==='rating' ? 'page' : 'false');
   clearInterval(arena.poll); arena.poll=null;
   if(v==='arena'){ document.title='Арена — Трейд Арена'; loadArena(); arena.poll = setInterval(loadArena, 15000); }
+  else if(v==='rating'){ document.title='Рейтинг Эло — Трейд Арена'; loadRating(); }
   else setTimeout(()=>{ chart.timeScale().getVisibleLogicalRange() && alignScales(); }, 50);
 }
 function route(){
   const h = decodeURIComponent(location.hash.slice(1));
   if(h==='arena'){ if(comp.id) leaveComp(); setView('arena'); return; }
+  if(h==='rating'){ if(comp.id) leaveComp(); setView('rating'); return; }
   const m = h.match(/^c\/([0-9a-f-]{36})$/i);
   if(m){ enterComp(m[1].toLowerCase()); $('navArena').setAttribute('aria-current','page'); $('navChart').setAttribute('aria-current','false'); return; }
   const wasComp = !!comp.id; if(wasComp) leaveComp();
@@ -1544,7 +1942,7 @@ function route(){
   const changed = (s && symInfo(s.toUpperCase()) && s.toUpperCase()!==state.sym) || (iv && INTERVALS.find(x=>x[0]===iv) && iv!==state.iv);
   if(s && symInfo(s.toUpperCase())) state.sym = s.toUpperCase();
   if(iv && INTERVALS.find(x=>x[0]===iv)) state.iv = iv;
-  const wasArena = state.view==='arena';
+  const wasArena = state.view==='arena' || state.view==='rating';
   setView('chart');
   if(changed || wasComp || !state.bars.length) load(); else if(wasArena) history.replaceState(null,'',`#${state.sym}/${state.iv}`);
 }
