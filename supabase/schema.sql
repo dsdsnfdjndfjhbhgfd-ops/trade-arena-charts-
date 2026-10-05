@@ -51,6 +51,11 @@ create table if not exists public.competitions (
   check (ends_at > starts_at and ends_at - starts_at <= interval '30 days')
 );
 create index if not exists competitions_ends_at on public.competitions (ends_at desc);
+-- тип: обычное соревнование или схватка 1 на 1
+alter table public.competitions add column if not exists kind text not null default 'tournament';
+do $$ begin
+  alter table public.competitions add constraint competitions_kind_check check (kind in ('tournament','duel'));
+exception when duplicate_object then null; end $$;
 
 create table if not exists public.participants (
   competition_id uuid not null references public.competitions(id) on delete cascade,
@@ -86,23 +91,37 @@ create table if not exists public.trades (
 create index if not exists trades_comp_user on public.trades (competition_id, user_id, created_at desc);
 create index if not exists trades_symbol_time on public.trades (symbol, created_at desc);
 
+-- ---------- Боты ----------
+-- Бот подключается, если игрок ждёт соперников дольше 3 минут.
+-- Сделки бота не хранятся: его стратегия детерминированно считается в браузере
+-- по общедоступным свечам Binance, поэтому у всех зрителей результат одинаковый.
+create table if not exists public.competition_bots (
+  competition_id uuid primary key references public.competitions(id) on delete cascade,
+  name           text not null,
+  strategy       text not null check (strategy in ('trend','momentum','contrarian','hodl')),
+  joined_at      timestamptz not null default now()
+);
+
 -- ---------- Доступ: читать могут все, менять — только через функции ниже ----------
 alter table public.profiles     enable row level security;
 alter table public.competitions enable row level security;
 alter table public.participants enable row level security;
 alter table public.positions    enable row level security;
 alter table public.trades       enable row level security;
+alter table public.competition_bots enable row level security;
 
 drop policy if exists "read all" on public.profiles;
 drop policy if exists "read all" on public.competitions;
 drop policy if exists "read all" on public.participants;
 drop policy if exists "read all" on public.positions;
 drop policy if exists "read all" on public.trades;
+drop policy if exists "read all" on public.competition_bots;
 create policy "read all" on public.profiles     for select using (true);
 create policy "read all" on public.competitions for select using (true);
 create policy "read all" on public.participants for select using (true);
 create policy "read all" on public.positions    for select using (true);
 create policy "read all" on public.trades       for select using (true);
+create policy "read all" on public.competition_bots for select using (true);
 
 -- ---------- Создать соревнование (создатель сразу становится участником) ----------
 create or replace function public.create_competition(
@@ -151,12 +170,109 @@ declare
   c competitions;
 begin
   if uid is null then raise exception 'Нужно войти в аккаунт'; end if;
-  select * into c from competitions where id = p_competition;
+  select * into c from competitions where id = p_competition for update;
   if not found then raise exception 'Соревнование не найдено'; end if;
   if now() >= c.ends_at then raise exception 'Соревнование уже завершилось'; end if;
-  insert into participants (competition_id, user_id, cash)
-  values (c.id, uid, c.start_balance)
-  on conflict do nothing;
+  if exists (select 1 from participants where competition_id = c.id and user_id = uid) then return; end if;
+
+  if c.kind = 'duel' then
+    if (select count(*) from participants where competition_id = c.id)
+       + (select count(*) from competition_bots where competition_id = c.id) >= 2 then
+      raise exception 'В этой схватке уже два игрока';
+    end if;
+    -- второй игрок найден — схватка начинается сразу
+    if c.starts_at > now() then
+      update competitions set ends_at = now() + (ends_at - starts_at), starts_at = now() where id = c.id;
+    end if;
+  end if;
+
+  insert into participants (competition_id, user_id, cash) values (c.id, uid, c.start_balance);
+end $$;
+
+-- ---------- Быстрая схватка 1 на 1: найти соперника или встать в ожидание ----------
+create or replace function public.find_duel(p_duration_minutes int)
+returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  cid uuid;
+  dur interval;
+begin
+  if uid is null then raise exception 'Нужно войти в аккаунт'; end if;
+  if p_duration_minutes not in (3, 5, 10, 15, 30, 60) then raise exception 'Недопустимая длительность схватки'; end if;
+  dur := make_interval(mins => p_duration_minutes);
+
+  -- уже жду соперника — возвращаю свою схватку
+  select c.id into cid from competitions c
+  where c.kind = 'duel' and c.created_by = uid and c.starts_at > now()
+    and (select count(*) from participants p where p.competition_id = c.id) = 1
+    and not exists (select 1 from competition_bots b where b.competition_id = c.id)
+  order by c.created_at desc limit 1;
+  if cid is not null then return cid; end if;
+
+  -- кто-то ждёт схватку такой же длительности — присоединяюсь
+  select c.id into cid from competitions c
+  where c.kind = 'duel' and c.created_by <> uid and c.starts_at > now() and c.ends_at - c.starts_at = dur
+    and (select count(*) from participants p where p.competition_id = c.id) = 1
+    and not exists (select 1 from competition_bots b where b.competition_id = c.id)
+  order by c.created_at
+  limit 1
+  for update of c skip locked;
+  if cid is not null then
+    update competitions set starts_at = now(), ends_at = now() + dur where id = cid;
+    insert into participants (competition_id, user_id, cash)
+      select cid, uid, start_balance from competitions where id = cid;
+    return cid;
+  end if;
+
+  if (select count(*) from competitions where created_by = uid and kind = 'duel' and created_at > now() - interval '1 hour') >= 30 then
+    raise exception 'Слишком много схваток за час, попробуйте позже';
+  end if;
+
+  -- никого нет — создаю схватку; через 3 минуты без соперника подключится бот
+  insert into competitions (title, created_by, kind, symbols, start_balance, starts_at, ends_at)
+  values ('Схватка 1 на 1', uid, 'duel', array['BTCUSDT','ETHUSDT','SOLUSDT'], 10000,
+          now() + interval '3 minutes', now() + interval '3 minutes' + dur)
+  returning id into cid;
+  insert into participants (competition_id, user_id, cash) values (cid, uid, 10000);
+  return cid;
+end $$;
+
+-- ---------- Позвать бота: игрок один и ждёт дольше 3 минут ----------
+create or replace function public.summon_bot(p_competition uuid)
+returns json
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  c competitions;
+  n int;
+  j timestamptz;
+  strat text;
+  bot competition_bots;
+begin
+  if uid is null then raise exception 'Нужно войти в аккаунт'; end if;
+  select * into c from competitions where id = p_competition for update;
+  if not found then raise exception 'Соревнование не найдено'; end if;
+  select * into bot from competition_bots where competition_id = c.id;
+  if found then return row_to_json(bot); end if;
+  if now() >= c.ends_at then raise exception 'Соревнование завершено'; end if;
+  if not exists (select 1 from participants where competition_id = c.id and user_id = uid) then
+    raise exception 'Сначала вступите в соревнование';
+  end if;
+  select count(*), max(joined_at) into n, j from participants where competition_id = c.id;
+  if n <> 1 then raise exception 'Соперник уже есть'; end if;
+  if now() < j + interval '3 minutes' then raise exception 'Бот подключится через 3 минуты ожидания'; end if;
+
+  strat := (array['trend','momentum','contrarian','hodl'])[1 + floor(random() * 4)::int];
+  insert into competition_bots (competition_id, name, strategy)
+  values (c.id, case strat when 'trend' then 'Бот Трендовик' when 'momentum' then 'Бот Импульс'
+                           when 'contrarian' then 'Бот Контрарий' else 'Бот Ходлер' end, strat)
+  returning * into bot;
+
+  if c.kind = 'duel' and c.starts_at > now() then
+    update competitions set ends_at = now() + (ends_at - starts_at), starts_at = now() where id = c.id;
+  end if;
+  return row_to_json(bot);
 end $$;
 
 -- ---------- Сделка по рыночной цене ----------
@@ -245,6 +361,10 @@ grant execute on function public.server_time() to anon, authenticated;
 revoke all on function public.create_competition(text, text[], numeric, int, int) from public, anon;
 revoke all on function public.join_competition(uuid) from public, anon;
 revoke all on function public.place_order(uuid, text, text, numeric, numeric) from public, anon;
+revoke all on function public.find_duel(int) from public, anon;
+revoke all on function public.summon_bot(uuid) from public, anon;
+grant execute on function public.find_duel(int) to authenticated;
+grant execute on function public.summon_bot(uuid) to authenticated;
 grant execute on function public.create_competition(text, text[], numeric, int, int) to authenticated;
 grant execute on function public.join_competition(uuid) to authenticated;
 grant execute on function public.place_order(uuid, text, text, numeric, numeric) to authenticated;

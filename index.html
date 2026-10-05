@@ -219,6 +219,15 @@ footer.note{padding:10px 16px;font-size:11px;color:var(--dim);border-top:1px sol
 .card-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:auto;padding-top:4px}
 .card-foot .by{font-size:12px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .badge-me{font-size:11px;color:var(--accent);font-weight:800}
+.duel{display:grid;grid-template-columns:1fr auto;gap:18px 28px;align-items:center;padding:22px 24px;border:1px solid rgba(245,184,61,.35);border-radius:16px;background:linear-gradient(115deg,rgba(245,184,61,.13),rgba(255,84,112,.07) 55%,transparent);margin-bottom:22px}
+.duel h2{margin:8px 0 6px;font-size:22px;font-weight:800}
+.duel p{margin:0;color:var(--muted);line-height:1.55;max-width:600px}
+.duel-act{display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+.duel-act .btn{min-width:220px;padding:11px 18px;font-size:14px}
+.duel-wait{font-size:12px;color:var(--muted);min-height:16px}
+.pill.vs{background:rgba(255,84,112,.14);color:var(--down)}
+.tag-bot{display:inline-block;font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(90,169,255,.16);color:var(--ema);font-weight:800;margin-left:6px;text-transform:uppercase;letter-spacing:.05em;vertical-align:2px}
+.wait-note{color:var(--accent)}
 .empty{padding:50px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line-2);border-radius:14px}
 .empty b{display:block;color:var(--text);font-size:16px;margin-bottom:6px}
 .setup{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;line-height:1.6;color:var(--muted)}
@@ -274,6 +283,9 @@ dialog::backdrop{background:rgba(3,6,10,.72);backdrop-filter:blur(3px)}
   .arena-in{padding:22px 16px 40px}
   .arena-head h1{font-size:26px}
   .rules{grid-template-columns:1fr}
+  .duel{grid-template-columns:1fr;padding:18px}
+  .duel-act{align-items:stretch}
+  .duel-act .btn{min-width:0}
   .stat span:last-child{font-size:12px}
 }
 </style>
@@ -398,6 +410,18 @@ dialog::backdrop{background:rgba(3,6,10,.72);backdrop-filter:blur(3px)}
           <p>Соревнования по трейдингу на время. Все участники получают одинаковый виртуальный баланс и торгуют по реальным ценам Binance. Побеждает тот, у кого к финишу больше капитал.</p>
         </div>
         <button class="btn primary" id="btnCreate">Создать соревнование</button>
+      </div>
+      <div class="duel" id="duelBox">
+        <div>
+          <span class="pill vs">1 на 1</span>
+          <h2>Быстрая схватка</h2>
+          <p>Дуэль на BTC, ETH и SOL, у обоих по 10 000 $. Подбираем живого соперника, а если за 3 минуты никто не найдётся, с вами сыграет бот.</p>
+        </div>
+        <div class="duel-act">
+          <div class="chips mono" id="duelDur"></div>
+          <button class="btn primary" id="btnDuel">Найти соперника</button>
+          <span class="duel-wait" id="duelWait"></span>
+        </div>
       </div>
       <div class="rules">
         <div class="rule"><b>01 · Вступите</b><span>Выберите соревнование и нажмите «Участвовать». Баланс у всех одинаковый.</span></div>
@@ -1005,7 +1029,7 @@ async function loadArena(){
   if(!sb){ renderArena(); return; }
   const [r, m] = await Promise.all([
     sb.from('competitions')
-      .select('id,title,symbols,start_balance,starts_at,ends_at,created_by,participants(count),creator:profiles!competitions_created_by_fkey(username)')
+      .select('id,title,kind,symbols,start_balance,starts_at,ends_at,created_by,participants(count),competition_bots(count),creator:profiles!competitions_created_by_fkey(username)')
       .order('starts_at',{ascending:false}).limit(200),
     me ? sb.from('participants').select('competition_id').eq('user_id',me.id) : Promise.resolve({data:[]}),
   ]);
@@ -1017,6 +1041,7 @@ async function loadArena(){
 }
 function renderArena(){
   const body = $('arenaBody');
+  renderDuelBox();
   if(!sb){
     body.innerHTML = `<div class="setup"><b>База данных ещё не подключена.</b><br>
       Владельцу сайта: создайте проект в Supabase, выполните файл <code>supabase/schema.sql</code> в SQL Editor
@@ -1032,7 +1057,8 @@ function renderArena(){
   groups.done.sort((a,b)=>Date.parse(b.ends_at)-Date.parse(a.ends_at));
   const ord = {live:0,soon:1,done:2};
   groups.mine.sort((a,b)=>ord[statusOf(a)]-ord[statusOf(b)] || Date.parse(b.starts_at)-Date.parse(a.starts_at));
-  arena.statuses = arena.list.map(statusOf).join();
+  arena.statuses = arena.list.map(c=>statusOf(c)+playersOf(c)).join();
+  renderDuelBox();
   const tabs = [['live','Идут'],['soon','Скоро'],['done','Завершённые']].concat(me?[['mine','Мои']]:[]);
   if(!tabs.find(t=>t[0]===arena.filter)) arena.filter='live';
   const items = groups[arena.filter];
@@ -1049,21 +1075,26 @@ function renderArena(){
       : `<div class="empty"><b>${emptyText[0]}</b>${emptyText[1]}<div style="margin-top:14px"><button class="btn primary" data-create>Создать соревнование</button></div></div>`}`;
   tick();
 }
+const playersOf = c => (c.participants?.[0]?.count ?? 0) + (c.competition_bots?.[0]?.count ?? 0);
+const isWaitingDuel = c => c.kind==='duel' && statusOf(c)==='soon' && playersOf(c)<2;
 function cardHTML(c){
-  const st = statusOf(c), n = c.participants?.[0]?.count ?? 0, joined = arena.mine.has(c.id);
-  const pill = {live:'<span class="pill live">Идёт</span>', soon:'<span class="pill soon">Скоро</span>', done:'<span class="pill done">Завершено</span>'}[st];
-  const cd = st==='live' ? `<span class="cd" data-cd="${Date.parse(c.ends_at)}" data-pre="осталось "></span>`
+  const st = statusOf(c), n = playersOf(c), joined = arena.mine.has(c.id), duel = c.kind==='duel', waiting = isWaitingDuel(c);
+  const pill = waiting ? '<span class="pill vs">Ищет соперника</span>'
+    : {live:'<span class="pill live">Идёт</span>', soon:'<span class="pill soon">Скоро</span>', done:'<span class="pill done">Завершено</span>'}[st];
+  const cd = waiting ? `<span class="cd" data-cd="${Date.parse(c.starts_at)}" data-pre="бот через "></span>`
+           : st==='live' ? `<span class="cd" data-cd="${Date.parse(c.ends_at)}" data-pre="осталось "></span>`
            : st==='soon' ? `<span class="cd" data-cd="${Date.parse(c.starts_at)}" data-pre="старт через "></span>`
            : `<span class="cd">${fmtDate(Date.parse(c.ends_at))}</span>`;
   let btn;
   if(st==='done') btn = `<button class="btn sm" data-open="${c.id}">Результаты</button>`;
   else if(joined) btn = `<button class="btn sm primary" data-open="${c.id}">Открыть</button>`;
-  else btn = `<button class="btn sm primary" data-join="${c.id}">Участвовать</button>`;
+  else if(duel && n>=2) btn = `<button class="btn sm" data-open="${c.id}">Смотреть</button>`;
+  else btn = `<button class="btn sm primary" data-join="${c.id}">${duel?'Принять вызов':'Участвовать'}</button>`;
   return `<article class="card">
     <div class="card-top">${pill}${cd}</div>
     <h3>${esc(c.title)}</h3>
     <div class="coins">${c.symbols.map(s=>`<span class="coin">${base(s)}</span>`).join('')}</div>
-    <div class="card-meta"><span>⏱ <b>${fmtLen(durMin(c))}</b></span><span>Баланс <b>${fmtInt(c.start_balance)} $</b></span><span><b>${n}</b> ${plural(n,'участник','участника','участников')}</span></div>
+    <div class="card-meta"><span>⏱ <b>${fmtLen(durMin(c))}</b></span><span>Баланс <b>${fmtInt(c.start_balance)} $</b></span>${duel?'<span>⚔ <b>1 на 1</b></span>':`<span><b>${n}</b> ${plural(n,'участник','участника','участников')}</span>`}</div>
     <div class="card-foot"><span class="by">${joined?'<span class="badge-me">Вы участвуете</span>':'от '+esc(c.creator?.username||'игрока')}</span>${btn}</div>
   </article>`;
 }
@@ -1076,6 +1107,28 @@ $('arenaBody').addEventListener('click', async e => {
   else if(t.dataset.join) joinComp(t.dataset.join, t);
 });
 $('btnCreate').addEventListener('click', ()=>openCreate());
+
+/* ---------- Быстрая схватка 1 на 1 ---------- */
+const DUEL_DUR = [[5,'5 мин'],[15,'15 мин'],[30,'30 мин']];
+let duelDur = store.get('duelDur', 5); if(!DUEL_DUR.find(d=>d[0]===duelDur)) duelDur = 5;
+function renderDuelBox(){
+  $('duelBox').hidden = !sb;
+  $('duelDur').innerHTML = DUEL_DUR.map(([v,l])=>`<button type="button" data-v="${v}" aria-pressed="${duelDur===v}">${l}</button>`).join('');
+  const waiting = arena.list.filter(c => isWaitingDuel(c) && !arena.mine.has(c.id));
+  $('duelWait').textContent = waiting.length ? `Сейчас ищут соперника: ${waiting.length} ${plural(waiting.length,'игрок','игрока','игроков')}` : 'Схватка начнётся, как только найдётся соперник';
+}
+$('duelDur').addEventListener('click', e => { const b=e.target.closest('button'); if(!b) return; duelDur=+b.dataset.v; store.set('duelDur',duelDur); renderDuelBox(); });
+$('btnDuel').addEventListener('click', () => findDuel());
+async function findDuel(){
+  if(!sb) return toast('База данных ещё не подключена', true);
+  if(!me){ afterLogin = findDuel; openAuth('up'); toast('Войдите или зарегистрируйтесь, чтобы сыграть'); return; }
+  const btn = $('btnDuel'); btn.disabled = true; btn.textContent = 'Ищем…';
+  const {data, error} = await sb.rpc('find_duel', {p_duration_minutes: duelDur});
+  btn.disabled = false; btn.textContent = 'Найти соперника';
+  if(error) return toast(errText(error), true);
+  arena.mine.add(data);
+  location.hash = '#c/'+data;
+}
 
 async function joinComp(id, btn){
   if(!me){ afterLogin = () => joinComp(id); openAuth('up'); toast('Войдите или зарегистрируйтесь, чтобы участвовать'); return; }
@@ -1128,7 +1181,8 @@ $('createForm').addEventListener('submit', async e => {
 /* =====================================================================
    Режим соревнования
    ===================================================================== */
-const comp = {id:null, c:null, parts:[], pos:[], myTrades:[], final:null, poll:null, side:'buy', sellAll:false, busy:false, tab:'trade', lastStatus:null};
+const comp = {id:null, c:null, parts:[], pos:[], myTrades:[], final:null, poll:null, side:'buy', sellAll:false, busy:false, tab:'trade', lastStatus:null,
+              bot:null, botK:{}, botMeta:null, botKAt:0, summoning:false, summonAt:0, seenBot:false, seenPlayers:0};
 
 async function enterComp(id){
   if(!sb){ location.hash='#arena'; return; }
@@ -1140,7 +1194,7 @@ async function enterComp(id){
   comp.c = c; comp.lastStatus = statusOf(c);
   if(!c.symbols.includes(state.sym)) state.sym = c.symbols[0];
   $('compBar').hidden = false; $('rtabs').hidden = false;
-  $('cbTitle').textContent = c.title; document.title = c.title+' — Трейд Арена';
+  $('cbTitle').textContent = c.kind==='duel' ? '⚔ '+c.title : c.title; document.title = c.title+' — Трейд Арена';
   setTab(comp.lastStatus==='done' ? 'board' : 'trade');
   watchKey=''; renderWatch(); clearTrades();
   load();
@@ -1149,7 +1203,8 @@ async function enterComp(id){
 }
 function leaveComp(){
   clearInterval(comp.poll); comp.poll=null;
-  Object.assign(comp, {id:null, c:null, parts:[], pos:[], myTrades:[], final:null, lastStatus:null});
+  Object.assign(comp, {id:null, c:null, parts:[], pos:[], myTrades:[], final:null, lastStatus:null,
+    bot:null, botK:{}, botMeta:null, botKAt:0, summoning:false, summonAt:0, seenBot:false, seenPlayers:0});
   $('compBar').hidden = true; $('rtabs').hidden = true;
   ['pTrade','pBoard'].forEach(id=>$(id).hidden=true); $('pFeed').hidden=false;
   if(avgLine){ candles.removePriceLine(avgLine); avgLine=null; }
@@ -1157,18 +1212,83 @@ function leaveComp(){
 }
 async function refreshComp(){
   const id = comp.id; if(!id || !comp.c) return;
-  const [p, q, t] = await Promise.all([
+  const [cr, br, p, q, t] = await Promise.all([
+    sb.from('competitions').select('*').eq('id',id).maybeSingle(),
+    sb.from('competition_bots').select('*').eq('competition_id',id).maybeSingle(),
     sb.from('participants').select('user_id,cash,joined_at,profiles(username)').eq('competition_id',id),
     sb.from('positions').select('user_id,symbol,qty,avg_price').eq('competition_id',id),
     me ? sb.from('trades').select('symbol,side,qty,price,fee,created_at').eq('competition_id',id).eq('user_id',me.id).order('created_at',{ascending:false}).limit(30)
        : Promise.resolve({data:[]}),
   ]);
   if(id!==comp.id) return;
+  if(!cr.error && cr.data) comp.c = cr.data;   // время старта схватки меняется, когда находится соперник
+  if(!br.error) comp.bot = br.data || null;
   if(!p.error) comp.parts = p.data||[];
+  // уведомления: соперник найден / подключился бот
+  const humans = comp.parts.length;
+  if(comp.seenPlayers && humans>comp.seenPlayers && me && comp.parts.some(x=>x.user_id===me.id)) toast(comp.c.kind==='duel' ? 'Соперник найден! Схватка началась' : 'К соревнованию присоединился новый игрок');
+  if(comp.bot && !comp.seenBot && comp.seenPlayers) toast(`${comp.bot.name} принял вызов!`);
+  comp.seenPlayers = humans; comp.seenBot = !!comp.bot;
   if(!q.error) comp.pos = q.data||[];
   if(!t.error) comp.myTrades = t.data||[];
   if(statusOf(comp.c)==='done' && !comp.final) await loadFinalPrices();
+  if(comp.bot && state.mode==='live'){
+    const end = Date.parse(comp.c.ends_at), finished = comp.botMeta && comp.botMeta.cutoff>=end;
+    if(!finished && (!comp.botMeta || Date.now()-comp.botKAt > 20000)) await loadBotCandles();
+  }
   renderComp(); updateAvgLine();
+}
+
+/* ---------- Бот: стратегия по свечам Binance ----------
+   Сделки бота не хранятся в базе: решения принимаются только по закрытым свечам,
+   а исполняются по цене открытия следующей свечи. Данные у всех одинаковые,
+   поэтому любой зритель видит тот же результат бота. */
+const BOT_STYLE = {trend:'по тренду', momentum:'импульс', contrarian:'против толпы', hodl:'купил и держит'};
+function botInterval(t0, end){ const D = (end-t0)/60000;
+  return D<=900 ? ['1m',60e3] : D<=4500 ? ['5m',300e3] : D<=13500 ? ['15m',900e3] : ['1h',3600e3]; }
+async function loadBotCandles(){
+  const c = comp.c, b = comp.bot, id = comp.id; if(!b) return;
+  const t0 = Math.max(Date.parse(c.starts_at), Date.parse(b.joined_at)), end = Date.parse(c.ends_at);
+  const t1 = Math.min(now(), end); if(t1<=t0) return;
+  const [iv, ms] = botInterval(t0, end), start = Math.floor(t0/ms)*ms - 30*ms, out = {};
+  await Promise.all(c.symbols.map(async s => {
+    try{ out[s] = await getJSON(`/api/v3/klines?symbol=${s}&interval=${iv}&startTime=${start}&endTime=${Math.floor(t1)}&limit=1000`); }catch(e){}
+  }));
+  if(id!==comp.id) return;
+  comp.botK = out; comp.botMeta = {t0, ms, cutoff:t1}; comp.botKAt = Date.now();
+}
+function simBot(){
+  const b = comp.bot, m = comp.botMeta; if(!b || !m) return null;
+  const c = comp.c, syms = c.symbols, cap = +c.start_balance/syms.length, end = Date.parse(c.ends_at);
+  const tStart = Math.ceil(m.t0/m.ms)*m.ms, cutoff = statusOf(c)==='done' ? end : Math.min(now(), end);
+  let eq = 0, trades = 0; const held = [];
+  for(const s of syms){
+    const k = comp.botK[s]; if(!k || !k.length){ eq += cap; continue; }
+    let cash = cap, qty = 0, pending = null, ef = null, es = null; const cl = [];
+    for(const r of k){
+      const ot = r[0], o = +r[1], close = +r[4];
+      if(pending && ot>=tStart && ot<end){
+        if(pending==='buy' && qty===0){ qty = cash*(1-FEE)/o; cash = 0; trades++; }
+        else if(pending==='sell' && qty>0){ cash = qty*o*(1-FEE); qty = 0; trades++; }
+        pending = null;
+      }
+      if(ot + m.ms > cutoff) break;          // незакрытая свеча — решений по ней нет
+      cl.push(close); if(cl.length>20) cl.shift();
+      ef = ef==null ? close : close*(2/6) + ef*(1-2/6);
+      es = es==null ? close : close*(2/14) + es*(1-2/14);
+      let sig = null, n = cl.length;
+      if(b.strategy==='hodl') sig = 'buy';
+      else if(b.strategy==='trend') sig = ef>es ? 'buy' : 'sell';
+      else if(b.strategy==='momentum' && n>=3) sig = cl[n-1]>cl[n-2] && cl[n-2]>cl[n-3] ? 'buy' : cl[n-1]<cl[n-2] && cl[n-2]<cl[n-3] ? 'sell' : null;
+      else if(b.strategy==='contrarian' && n>=8){ let g=0, l=0;
+        for(let i=n-7;i<n;i++){ const d = cl[i]-cl[i-1]; if(d>0) g+=d; else l-=d; }
+        const r7 = l===0 ? 100 : 100-100/(1+g/l); sig = r7<35 ? 'buy' : r7>60 ? 'sell' : null; }
+      pending = sig==='buy' && qty===0 ? 'buy' : sig==='sell' && qty>0 ? 'sell' : null;
+    }
+    const mark = priceOf(s) || +k[k.length-1][4];
+    eq += cash + qty*mark; if(qty>0) held.push(s);
+  }
+  return {eq, held, trades};
 }
 // Итоговые цены — закрытие минутной свечи в момент финиша (у всех одинаковые)
 async function loadFinalPrices(){
@@ -1188,12 +1308,18 @@ function standings(){
   const byUser = {};
   comp.pos.forEach(x => (byUser[x.user_id] ||= []).push(x));
   const sb0 = +comp.c.start_balance, started = now() >= Date.parse(comp.c.starts_at);
-  return comp.parts.map(p => {
+  const rows = comp.parts.map(p => {
     const pos = byUser[p.user_id] || [];
     const inCoins = pos.reduce((a,x)=>a + +x.qty*priceOf(x.symbol), 0);
     const eq = started ? +p.cash + inCoins : sb0;
     return {id:p.user_id, name:p.profiles?.username || 'игрок', cash:+p.cash, eq, pnl:(eq/sb0-1)*100, pos, nPos:pos.length};
-  }).sort((a,b)=> b.eq-a.eq || a.name.localeCompare(b.name));
+  });
+  if(comp.bot){
+    const sim = started ? simBot() : null, eq = sim ? sim.eq : sb0;
+    rows.push({id:'bot', bot:true, name:comp.bot.name, style:BOT_STYLE[comp.bot.strategy]||'', eq, pnl:(eq/sb0-1)*100,
+               pos:(sim?.held||[]).map(s=>({symbol:s})), nPos:sim?.held.length||0, trades:sim?.trades||0});
+  }
+  return rows.sort((a,b)=> b.eq-a.eq || a.name.localeCompare(b.name));
 }
 
 function setTab(t){
@@ -1207,6 +1333,14 @@ function renderComp(){
   if(!comp.c) return;
   const c = comp.c, st = statusOf(c), rows = standings();
   const myIdx = me ? rows.findIndex(r=>r.id===me.id) : -1, mine = myIdx>=0 ? rows[myIdx] : null;
+  // Игрок один дольше 3 минут — зовём бота (сервер сам проверит условия)
+  const myPart = me && comp.parts.find(p=>p.user_id===me.id);
+  comp.botAt = myPart && comp.parts.length===1 && !comp.bot && st!=='done' ? Date.parse(myPart.joined_at)+180e3 : null;
+  if(comp.botAt && now()>=comp.botAt && !comp.summoning && Date.now()-comp.summonAt>8000){
+    comp.summoning = true; comp.summonAt = Date.now();
+    sb.rpc('summon_bot', {p_competition:comp.id}).then(() => { comp.summoning = false; refreshComp(); });
+  }
+  const waitingDuel = c.kind==='duel' && st==='soon' && comp.parts.length + (comp.bot?1:0) < 2;
   if(comp.lastStatus && comp.lastStatus!==st){ // смена этапа: старт или финиш
     comp.lastStatus = st;
     if(st==='live') toast('Старт! Соревнование началось');
@@ -1214,8 +1348,8 @@ function renderComp(){
   }
   // Верхняя панель
   const pill = $('cbPill');
-  pill.className = 'pill '+st; pill.textContent = {live:'Идёт',soon:'Скоро',done:'Завершено'}[st];
-  $('cbTimerLabel').textContent = {live:'До финиша',soon:'До старта',done:'Финиш'}[st];
+  pill.className = 'pill '+(waitingDuel?'vs':st); pill.textContent = waitingDuel ? 'Поиск соперника' : {live:'Идёт',soon:'Скоро',done:'Завершено'}[st];
+  $('cbTimerLabel').textContent = waitingDuel ? 'Бот подключится через' : {live:'До финиша',soon:'До старта',done:'Финиш'}[st];
   const tm = $('cbTimer');
   if(st==='done'){ tm.removeAttribute('data-cd'); tm.textContent = fmtDate(Date.parse(c.ends_at)); }
   else { tm.dataset.cd = Date.parse(st==='live'?c.ends_at:c.starts_at); tm.dataset.pre=''; }
@@ -1226,35 +1360,38 @@ function renderComp(){
     $('cbRank').textContent = `${myIdx+1} из ${rows.length}`;
   }
   renderBoard(rows, st);
-  renderTrade(mine, st);
+  renderTrade(mine, st, waitingDuel);
   tick();
 }
 function renderBoard(rows, st){
   $('boardList').innerHTML = rows.length ? rows.map((r,i)=>`
     <div class="b-row${me&&r.id===me.id?' me':''}">
       <span class="b-rank">${i+1}</span>
-      <span class="b-name">${esc(r.name)}${me&&r.id===me.id?'<small>вы</small>':''}</span>
+      <span class="b-name">${esc(r.name)}${r.bot?'<span class="tag-bot">бот</span>':''}${me&&r.id===me.id?'<small>вы</small>':''}</span>
       <span class="b-eq">${fmtUsd(r.eq)}</span>
-      <span class="b-sub">${r.nPos ? r.pos.map(x=>base(x.symbol)).join(', ') : 'только USDT'}</span>
+      <span class="b-sub">${r.bot ? esc(r.style)+' · ' : ''}${r.nPos ? r.pos.map(x=>base(x.symbol)).join(', ') : 'только USDT'}</span>
       <span class="b-pnl ${r.pnl>=0?'up':'down'}">${fmtPct(r.pnl)}</span>
     </div>`).join('') : '<div class="empty-s" style="padding:10px 8px">Участников пока нет</div>';
-  $('boardNote').textContent = st==='done'
+  $('boardNote').textContent = (comp.bot ? `${comp.bot.name} торгует сам: ${BOT_STYLE[comp.bot.strategy]}. ` : '') + (st==='done'
     ? (Object.keys(comp.final||{}).length ? 'Итог посчитан по ценам Binance на момент финиша.' : 'Итог посчитан по последним доступным ценам.')
-    : st==='soon' ? 'До старта у всех одинаковый баланс.' : 'Капитал = деньги + монеты по текущей цене. Обновляется вживую.';
+    : st==='soon' ? 'До старта у всех одинаковый баланс.' : 'Капитал = деньги + монеты по текущей цене. Обновляется вживую.');
 }
-function renderTrade(mine, st){
+function renderTrade(mine, st, waitingDuel){
   const s = state.sym, price = priceOf(s), b = base(s);
   const myPos = mine?.pos.find(x=>x.symbol===s), posQty = myPos ? +myPos.qty : 0;
   // Состояние: кто может торговать
   let msg = '', btn = '';
   if(!me){ msg = 'Войдите, чтобы участвовать и торговать.'; btn = '<button class="btn primary" data-a="login">Войти или зарегистрироваться</button>'; }
   else if(!mine && st!=='done'){ msg = `Вы ещё не участвуете. Стартовый баланс — ${fmtInt(comp.c.start_balance)} $.`; btn = '<button class="btn primary" data-a="join">Участвовать</button>'; }
-  else if(st==='soon'){ msg = 'Соревнование ещё не началось. Торговля откроется по таймеру.'; }
+  else if(waitingDuel){ msg = `<b>Ищем соперника…</b><br>Схватка начнётся, как только кто-то примет вызов. Если никто не найдётся, через <b class="num" data-cd="${comp.botAt||Date.parse(comp.c.starts_at)}"></b> с вами сыграет бот.`; btn = '<button class="btn" data-a="share">Позвать друга по ссылке</button>'; }
+  else if(st==='soon'){ msg = 'Соревнование ещё не началось. Торговля откроется по таймеру.'
+      + (comp.botAt ? ` <span class="wait-note">Если никто не присоединится, через <b class="num" data-cd="${comp.botAt}"></b> подключится бот.</span>` : ''); }
+  else if(st==='live' && comp.botAt && state.mode==='live'){ msg = `<span class="wait-note">Вы пока один. Если никто не присоединится, через <b class="num" data-cd="${comp.botAt}"></b> подключится бот.</span>`; }
   else if(st==='done'){ msg = mine ? `Соревнование завершено. Ваш результат: <b>${fmtUsd(mine.eq)}</b> (${fmtPct(mine.pnl)}).` : 'Соревнование завершено.'; btn = '<button class="btn" data-a="board">Смотреть рейтинг</button>'; }
   else if(state.mode==='demo'){ msg = 'Нет связи с Binance: без реальных цен торговать нельзя. Обновите страницу позже.'; }
   $('tpState').hidden = !msg; $('tpState').innerHTML = msg + (btn?'<br>'+btn:'');
   const can = !!mine && st==='live' && state.mode==='live';
-  $('tpForm').hidden = !mine || st==='done';
+  $('tpForm').hidden = !mine || st==='done' || !!waitingDuel;
   $('tpForm').querySelectorAll('button,input').forEach(x=>{ if(x.closest('.sidesw')) return; x.disabled = !can || comp.busy; });
   // Значения формы
   const cash = mine ? mine.cash : +comp.c.start_balance;
@@ -1301,7 +1438,8 @@ $('tpPcts').addEventListener('click', e => { const b=e.target.closest('button');
 $('tpState').addEventListener('click', e => { const a = e.target.closest('button')?.dataset.a;
   if(a==='login'){ afterLogin = null; openAuth('up'); }
   if(a==='join') joinComp(comp.id, e.target);
-  if(a==='board') setTab('board'); });
+  if(a==='board') setTab('board');
+  if(a==='share') $('cbShare').click(); });
 $('tpGo').addEventListener('click', placeOrder);
 $('tpAmt').addEventListener('keydown', e => { if(e.key==='Enter') placeOrder(); });
 
@@ -1352,7 +1490,7 @@ function tick(){
 }
 setInterval(() => {
   tick();
-  if(state.view==='arena' && arena.loaded && arena.list.map(statusOf).join()!==arena.statuses) renderArena();
+  if(state.view==='arena' && arena.loaded && arena.list.map(c=>statusOf(c)+playersOf(c)).join()!==arena.statuses) renderArena();
   if(comp.c){
     if(statusOf(comp.c)!==comp.lastStatus) renderComp();
     else if(comp.tab!=='feed' || !$('compBar').hidden) renderCompLight();
