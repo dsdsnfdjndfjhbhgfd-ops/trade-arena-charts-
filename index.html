@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Трейд Арена — графики</title>
+<meta name="description" content="Свечные графики криптовалют в реальном времени: объём, MA, EMA, полосы Боллинджера, RSI и лента сделок.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b0f14'/%3E%3Crect x='7' y='12' width='4' height='12' fill='%2322d39a'/%3E%3Crect x='14' y='6' width='4' height='14' fill='%23ff5470'/%3E%3Crect x='21' y='9' width='4' height='16' fill='%2322d39a'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0b0f14; --panel:#10161d; --panel-2:#151d26; --line:#1f2a36; --line-2:#2a3746;
+  --text:#e6edf3; --muted:#7d8b99; --dim:#55626f;
+  --up:#22d39a; --down:#ff5470; --accent:#f5b83d; --accent-ink:#1a1206;
+  --ma:#f5b83d; --ema:#5aa9ff; --bb:#b48cff; --rsi:#5aa9ff;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  --sans:'Manrope',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.up{color:var(--up)} .down{color:var(--down)}
+
+.app{display:grid;grid-template-columns:260px 1fr 280px;grid-template-rows:auto 1fr;height:100vh;min-height:620px}
+header{grid-column:1/-1;display:flex;align-items:center;gap:28px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.14em;font-size:13px;white-space:nowrap}
+.brand-mark{display:flex;gap:3px;align-items:flex-end;height:20px}
+.brand-mark i{display:block;width:4px;border-radius:1px}
+.brand-mark i:nth-child(1){height:11px;background:var(--up)}
+.brand-mark i:nth-child(2){height:18px;background:var(--down)}
+.brand-mark i:nth-child(3){height:14px;background:var(--up)}
+.quote{display:flex;align-items:baseline;gap:14px;min-width:0}
+.quote-sym{font-weight:800;font-size:18px}
+.quote-sym small{color:var(--muted);font-weight:500;font-size:13px}
+.quote-price{font-size:22px;font-weight:700}
+.quote-chg{font-size:13px;font-weight:500}
+.stats{display:flex;gap:22px;margin-left:auto}
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat span:first-child{font-size:11px;color:var(--muted)}
+.stat span:last-child{font-size:13px}
+.status{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.status.live .dot{background:var(--up);box-shadow:0 0 0 3px rgba(34,211,154,.15)}
+.status.demo .dot{background:var(--accent)}
+.status.demo{color:var(--accent)}
+
+aside{background:var(--panel);overflow:auto;min-height:0}
+.side-l{border-right:1px solid var(--line)}
+.side-r{border-left:1px solid var(--line);display:flex;flex-direction:column}
+.side-h{display:flex;justify-content:space-between;padding:14px 16px 8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.watch{list-style:none;margin:0;padding:0 8px 10px}
+.watch li button{width:100%;display:grid;grid-template-columns:1fr 64px;grid-template-rows:auto auto;column-gap:10px;align-items:center;padding:9px 10px;border-radius:8px;text-align:left}
+.watch li button:hover{background:var(--panel-2)}
+.watch li button[aria-current="true"]{background:var(--panel-2);box-shadow:inset 2px 0 0 var(--accent)}
+.w-sym{font-weight:700}
+.w-sym small{color:var(--muted);font-weight:500}
+.w-px{font-size:13px}
+.w-ch{font-size:12px;text-align:right}
+.w-spark{grid-row:1/3;grid-column:2;width:64px;height:28px}
+.w-meta{display:flex;justify-content:space-between;gap:8px;grid-column:1}
+
+main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line)}
+.seg{display:flex;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:2px}
+.seg button{padding:5px 10px;border-radius:6px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.seg button:hover{color:var(--text)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.toggles{display:flex;gap:6px;flex-wrap:wrap}
+.tg{display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:12px;color:var(--muted)}
+.tg::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c);opacity:.35}
+.tg[aria-pressed="true"]{color:var(--text);border-color:var(--line-2);background:var(--panel)}
+.tg[aria-pressed="true"]::before{opacity:1}
+.charts{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
+#chart{flex:1;min-height:240px;position:relative}
+#rsi{height:130px;border-top:1px solid var(--line);position:relative}
+#rsi[hidden]{display:none}
+.legend{position:absolute;top:8px;left:12px;z-index:3;font-family:var(--mono);font-size:12px;color:var(--muted);pointer-events:none;display:flex;flex-wrap:wrap;gap:4px 12px;max-width:calc(100% - 90px)}
+.legend b{color:var(--text);font-weight:500}
+.legend .ind{display:flex;gap:12px;width:100%}
+.pane-label{position:absolute;top:6px;left:12px;z-index:3;font-family:var(--mono);font-size:11px;color:var(--muted);pointer-events:none}
+.loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;z-index:4;background:var(--bg)}
+.loading[hidden]{display:none}
+
+.trades{flex:1;min-height:0;display:flex;flex-direction:column}
+.t-head,.t-row{display:grid;grid-template-columns:1.1fr 1fr .8fr;gap:8px;padding:0 16px;font-size:12px}
+.t-head{color:var(--dim);padding-bottom:6px}
+.t-head span:nth-child(n+2),.t-row span:nth-child(n+2){text-align:right}
+.t-list{flex:1;overflow:hidden}
+.t-row{padding-top:3px;padding-bottom:3px}
+.t-row span:nth-child(3){color:var(--muted)}
+.t-row.flash{animation:fl .8s ease-out}
+@keyframes fl{from{background:rgba(245,184,61,.12)}to{background:transparent}}
+.depth{padding:4px 16px 16px;border-top:1px solid var(--line)}
+.bar{height:6px;border-radius:3px;background:var(--down);overflow:hidden;margin:8px 0 6px}
+.bar i{display:block;height:100%;background:var(--up);transition:width .4s}
+.bar-l{display:flex;justify-content:space-between;font-size:12px}
+footer.note{padding:10px 16px;font-size:11px;color:var(--dim);border-top:1px solid var(--line)}
+footer.note a{color:var(--muted)}
+
+@media (max-width:1100px){
+  .app{grid-template-columns:220px 1fr}
+  .side-r{display:none}
+  .stats .stat:nth-child(n+3){display:none}
+}
+@media (max-width:760px){
+  .app{display:flex;flex-direction:column;height:auto;min-height:100vh}
+  header{flex-wrap:wrap;gap:8px 16px;padding:10px 16px}
+  .stats{margin-left:0;width:100%;justify-content:space-between;gap:10px}
+  .stats .stat:nth-child(n+3){display:flex}
+  .status{order:-1;margin-left:auto}
+  .side-l{border-right:0;border-bottom:1px solid var(--line);overflow:visible}
+  .side-l .side-h{display:none}
+  .watch{display:flex;overflow-x:auto;gap:6px;padding:8px 16px;scrollbar-width:none}
+  .watch li button{grid-template-columns:auto;min-width:118px;border:1px solid var(--line)}
+  .w-spark{display:none}
+  .w-meta{grid-column:1}
+  .toolbar{padding:8px 16px}
+  .seg{overflow-x:auto;max-width:100%}
+  #chart{height:56vh;flex:none}
+  .side-r{display:flex;border-left:0;border-top:1px solid var(--line);max-height:420px}
+  .stat span:last-child{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>ТРЕЙД АРЕНА</div>
+    <div class="quote">
+      <div class="quote-sym" id="qSym">BTC<small>/USDT</small></div>
+      <div class="quote-price num" id="qPrice">—</div>
+      <div class="quote-chg num" id="qChg">—</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span>Макс. 24ч</span><span class="num" id="sHigh">—</span></div>
+      <div class="stat"><span>Мин. 24ч</span><span class="num" id="sLow">—</span></div>
+      <div class="stat"><span>Объём 24ч</span><span class="num" id="sVol">—</span></div>
+    </div>
+    <div class="status" id="status"><span class="dot"></span><span id="statusText">Подключение…</span></div>
+  </header>
+
+  <aside class="side-l">
+    <div class="side-h"><span>Рынки</span><span>24ч</span></div>
+    <ul class="watch" id="watch"></ul>
+  </aside>
+
+  <main>
+    <div class="toolbar">
+      <div class="seg" id="intervals" role="group" aria-label="Таймфрейм"></div>
+      <div class="toggles" id="toggles" role="group" aria-label="Индикаторы">
+        <button class="tg" data-k="vol" style="--c:#4b5a6a">Объём</button>
+        <button class="tg" data-k="ma" style="--c:var(--ma)">MA 20</button>
+        <button class="tg" data-k="ema" style="--c:var(--ema)">EMA 50</button>
+        <button class="tg" data-k="bb" style="--c:var(--bb)">Боллинджер</button>
+        <button class="tg" data-k="rsi" style="--c:var(--rsi)">RSI 14</button>
+      </div>
+    </div>
+    <div class="charts">
+      <div id="chart"><div class="legend" id="legend"></div></div>
+      <div id="rsi"><div class="pane-label" id="rsiLabel">RSI 14</div></div>
+      <div class="loading" id="loading">Загрузка графика…</div>
+    </div>
+  </main>
+
+  <aside class="side-r">
+    <div class="side-h"><span>Сделки</span><span id="tCount" class="num"></span></div>
+    <div class="t-head"><span>Цена</span><span>Кол-во</span><span>Время</span></div>
+    <div class="trades"><div class="t-list" id="tList"></div></div>
+    <div class="depth">
+      <div class="side-h" style="padding:10px 0 0"><span>Покупки / продажи</span><span>посл. 100</span></div>
+      <div class="bar"><i id="bsBar" style="width:50%"></i></div>
+      <div class="bar-l num"><span class="up" id="bsBuy">50%</span><span class="down" id="bsSell">50%</span></div>
+    </div>
+    <footer class="note">Данные: Binance (публичное API). Не является инвестиционной рекомендацией.</footer>
+  </aside>
+</div>
+
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<script>window.LightweightCharts||document.write('<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"><\/script>')</script>
+<script>
+(() => {
+'use strict';
+
+/* ---------- Конфигурация ---------- */
+const SYMBOLS = [
+  {s:'BTCUSDT', b:'BTC', demo:62000},
+  {s:'ETHUSDT', b:'ETH', demo:2450},
+  {s:'SOLUSDT', b:'SOL', demo:145},
+  {s:'BNBUSDT', b:'BNB', demo:560},
+  {s:'XRPUSDT', b:'XRP', demo:0.58},
+  {s:'TONUSDT', b:'TON', demo:5.2},
+  {s:'DOGEUSDT',b:'DOGE',demo:0.11},
+  {s:'ADAUSDT', b:'ADA', demo:0.36},
+];
+const INTERVALS = [
+  ['1m','1м',60],['5m','5м',300],['15m','15м',900],['1h','1ч',3600],
+  ['4h','4ч',14400],['1d','1Д',86400],['1w','1Н',604800],
+];
+const REST = ['https://api.binance.com','https://data-api.binance.vision'];
+const WS   = ['wss://stream.binance.com:9443','wss://data-stream.binance.vision'];
+const TZ = -new Date().getTimezoneOffset() * 60; // сдвиг в местное время для оси
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = {up:css('--up'),down:css('--down'),ma:css('--ma'),ema:css('--ema'),bb:css('--bb'),rsi:css('--rsi'),
+           text:css('--muted'),line:css('--line'),bg:css('--bg')};
+
+const store = {
+  get(k,d){ try{ const v = localStorage.getItem('ta.'+k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+  set(k,v){ try{ localStorage.setItem('ta.'+k, JSON.stringify(v)); }catch(e){} },
+};
+
+/* ---------- Состояние ---------- */
+const fromHash = location.hash.slice(1).split('/');
+const state = {
+  sym: SYMBOLS.find(x=>x.s===(fromHash[0]||'').toUpperCase()) ? fromHash[0].toUpperCase() : store.get('sym','BTCUSDT'),
+  iv:  INTERVALS.find(x=>x[0]===fromHash[1]) ? fromHash[1] : store.get('iv','1h'),
+  ind: Object.assign({vol:true,ma:true,ema:true,bb:false,rsi:true}, store.get('ind',{})),
+  bars: [], trades: [], mode: null, rest: null, ws: null,
+  sockMain: null, sockWatch: null, demoTimer: null, tickers: {}, loadId: 0,
+};
+
+/* ---------- Форматирование ---------- */
+const prec = p => p >= 1000 ? 2 : p >= 10 ? 2 : p >= 1 ? 4 : p >= 0.01 ? 5 : 7;
+const fmtP = (p, d) => Number(p).toLocaleString('ru-RU',{minimumFractionDigits:d??prec(p),maximumFractionDigits:d??prec(p)});
+const fmtBig = v => { v=+v; const a=Math.abs(v);
+  return (a>=1e9?(v/1e9).toFixed(2)+' млрд':a>=1e6?(v/1e6).toFixed(2)+' млн':a>=1e3?(v/1e3).toFixed(1)+' тыс':v.toFixed(2)).replace('.',','); };
+const fmtQ = q => { q=+q; return (q>=1000?q.toLocaleString('ru-RU',{maximumFractionDigits:0}):q>=1?q.toFixed(3):q.toFixed(5)).replace('.',','); };
+const fmtPct = v => (v>0?'+':'')+v.toFixed(2)+'%';
+const fmtTime = ms => new Date(ms).toLocaleTimeString('ru-RU',{hour12:false});
+const $ = id => document.getElementById(id);
+const symInfo = s => SYMBOLS.find(x=>x.s===s);
+
+/* ---------- Индикаторы ---------- */
+function sma(vals, n){ const out=[]; let sum=0;
+  for(let i=0;i<vals.length;i++){ sum+=vals[i]; if(i>=n) sum-=vals[i-n]; out.push(i>=n-1?sum/n:null);} return out; }
+function ema(vals, n){ const out=[]; const k=2/(n+1); let prev=null;
+  for(let i=0;i<vals.length;i++){
+    if(i<n-1){ out.push(null); continue; }
+    if(prev===null){ let s=0; for(let j=i-n+1;j<=i;j++) s+=vals[j]; prev=s/n; }
+    else prev = vals[i]*k + prev*(1-k);
+    out.push(prev);
+  } return out; }
+function boll(vals, n=20, m=2){ const mid=sma(vals,n), up=[], lo=[];
+  for(let i=0;i<vals.length;i++){
+    if(mid[i]==null){up.push(null);lo.push(null);continue;}
+    let v=0; for(let j=i-n+1;j<=i;j++) v+=(vals[j]-mid[i])**2;
+    const sd=Math.sqrt(v/n); up.push(mid[i]+m*sd); lo.push(mid[i]-m*sd);
+  } return {mid,up,lo}; }
+function rsi(vals, n=14){ const out=[null]; let ag=0, al=0;
+  for(let i=1;i<vals.length;i++){
+    const d=vals[i]-vals[i-1], g=Math.max(d,0), l=Math.max(-d,0);
+    if(i<=n){ ag+=g; al+=l; if(i<n){out.push(null);continue;} ag/=n; al/=n; }
+    else { ag=(ag*(n-1)+g)/n; al=(al*(n-1)+l)/n; }
+    out.push(al===0?100:100-100/(1+ag/al));
+  } return out; }
+const toLine = (bars, vals) => bars.map((b,i)=> vals[i]==null ? {time:b.time} : {time:b.time, value:vals[i]});
+
+/* ---------- Графики ---------- */
+const baseOpts = {
+  autoSize:true,
+  layout:{background:{type:'solid',color:C.bg}, textColor:C.text, fontFamily:"'JetBrains Mono',monospace", fontSize:11},
+  grid:{vertLines:{color:'rgba(31,42,54,.6)'}, horzLines:{color:'rgba(31,42,54,.6)'}},
+  rightPriceScale:{borderColor:C.line},
+  timeScale:{borderColor:C.line, timeVisible:true, secondsVisible:false, rightOffset:6},
+  crosshair:{mode:0, vertLine:{color:'#3a4a5c',labelBackgroundColor:'#2a3746'}, horzLine:{color:'#3a4a5c',labelBackgroundColor:'#2a3746'}},
+  localization:{locale:'ru-RU'},
+};
+const chart = LightweightCharts.createChart($('chart'), baseOpts);
+const candles = chart.addCandlestickSeries({upColor:C.up, downColor:C.down, wickUpColor:C.up, wickDownColor:C.down, borderVisible:false});
+candles.priceScale().applyOptions({scaleMargins:{top:0.1,bottom:0.22}});
+const volume = chart.addHistogramSeries({priceFormat:{type:'volume'}, priceScaleId:'vol', lastValueVisible:false, priceLineVisible:false});
+chart.priceScale('vol').applyOptions({scaleMargins:{top:0.82,bottom:0}});
+const lineOpt = c => ({color:c, lineWidth:1.5, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false});
+const sMA  = chart.addLineSeries(lineOpt(C.ma));
+const sEMA = chart.addLineSeries(lineOpt(C.ema));
+const sBBu = chart.addLineSeries({...lineOpt(C.bb), lineWidth:1});
+const sBBm = chart.addLineSeries({...lineOpt(C.bb), lineWidth:1, lineStyle:2});
+const sBBl = chart.addLineSeries({...lineOpt(C.bb), lineWidth:1});
+
+const rsiChart = LightweightCharts.createChart($('rsi'), {...baseOpts, timeScale:{...baseOpts.timeScale, visible:false}});
+const sRSI = rsiChart.addLineSeries({color:C.rsi, lineWidth:1.5, priceLineVisible:false, lastValueVisible:true});
+sRSI.createPriceLine({price:70, color:'rgba(255,84,112,.5)', lineWidth:1, lineStyle:2, axisLabelVisible:false});
+sRSI.createPriceLine({price:30, color:'rgba(34,211,154,.5)', lineWidth:1, lineStyle:2, axisLabelVisible:false});
+rsiChart.priceScale('right').applyOptions({scaleMargins:{top:0.12,bottom:0.08}});
+
+// синхронизация масштаба основного графика и RSI
+let syncing = false;
+const sync = (a,b) => a.timeScale().subscribeVisibleLogicalRangeChange(r => {
+  if(syncing || !r) return; syncing = true; b.timeScale().setVisibleLogicalRange(r); syncing = false; });
+sync(chart, rsiChart); sync(rsiChart, chart);
+// выравниваем ширину правой шкалы, чтобы оси совпадали
+const alignScales = () => { const w = Math.max(chart.priceScale('right').width(), rsiChart.priceScale('right').width());
+  [chart,rsiChart].forEach(c=>c.applyOptions({rightPriceScale:{minimumWidth:w}})); };
+
+/* ---------- Отрисовка ---------- */
+let ind = {};
+function computeIndicators(){
+  const cl = state.bars.map(b=>b.close);
+  ind = {ma:sma(cl,20), ema:ema(cl,50), bb:boll(cl,20,2), rsi:rsi(cl,14)};
+}
+function setAll(){
+  const b = state.bars;
+  computeIndicators();
+  candles.setData(b);
+  volume.setData(b.map(x=>({time:x.time, value:x.volume, color:x.close>=x.open?'rgba(34,211,154,.35)':'rgba(255,84,112,.35)'})));
+  sMA.setData(toLine(b,ind.ma)); sEMA.setData(toLine(b,ind.ema));
+  sBBu.setData(toLine(b,ind.bb.up)); sBBm.setData(toLine(b,ind.bb.mid)); sBBl.setData(toLine(b,ind.bb.lo));
+  sRSI.setData(toLine(b,ind.rsi));
+  const last = b[b.length-1];
+  if(last){ const d=prec(last.close); candles.applyOptions({priceFormat:{type:'price',precision:d,minMove:1/10**d}}); }
+  applyToggles();
+  chart.timeScale().setVisibleLogicalRange({from:Math.max(0,b.length-150), to:b.length+6});
+  setTimeout(alignScales, 50);
+  legend();
+}
+function updateLast(){
+  const b = state.bars, i = b.length-1, x = b[i]; if(!x) return;
+  computeIndicators();
+  candles.update(x);
+  volume.update({time:x.time, value:x.volume, color:x.close>=x.open?'rgba(34,211,154,.35)':'rgba(255,84,112,.35)'});
+  const pt = v => v==null?{time:x.time}:{time:x.time,value:v};
+  sMA.update(pt(ind.ma[i])); sEMA.update(pt(ind.ema[i]));
+  sBBu.update(pt(ind.bb.up[i])); sBBm.update(pt(ind.bb.mid[i])); sBBl.update(pt(ind.bb.lo[i]));
+  sRSI.update(pt(ind.rsi[i]));
+  if(!hoverIdx) legend();
+}
+function applyToggles(){
+  volume.applyOptions({visible:state.ind.vol});
+  sMA.applyOptions({visible:state.ind.ma}); sEMA.applyOptions({visible:state.ind.ema});
+  [sBBu,sBBm,sBBl].forEach(s=>s.applyOptions({visible:state.ind.bb}));
+  $('rsi').hidden = !state.ind.rsi;
+  candles.priceScale().applyOptions({scaleMargins:{top:0.1,bottom:state.ind.vol?0.22:0.06}});
+  document.querySelectorAll('#toggles .tg').forEach(t=>t.setAttribute('aria-pressed', state.ind[t.dataset.k]));
+}
+
+/* ---------- Легенда ---------- */
+let hoverIdx = null;
+function legend(idx){
+  const b = state.bars; const i = idx ?? b.length-1; const x = b[i]; if(!x) return;
+  const d = prec(x.close), ch = (x.close-x.open)/x.open*100, cls = x.close>=x.open?'up':'down';
+  const f = v => v==null?'—':fmtP(v,d);
+  let ih = '';
+  if(state.ind.ma)  ih += `<span style="color:${C.ma}">MA20 ${f(ind.ma[i])}</span>`;
+  if(state.ind.ema) ih += `<span style="color:${C.ema}">EMA50 ${f(ind.ema[i])}</span>`;
+  if(state.ind.bb)  ih += `<span style="color:${C.bb}">BB ${f(ind.bb.up[i])} / ${f(ind.bb.lo[i])}</span>`;
+  $('legend').innerHTML =
+    `<span>О <b class="${cls}">${fmtP(x.open,d)}</b></span><span>М <b class="${cls}">${fmtP(x.high,d)}</b></span>`+
+    `<span>Н <b class="${cls}">${fmtP(x.low,d)}</b></span><span>З <b class="${cls}">${fmtP(x.close,d)}</b></span>`+
+    `<span class="${cls}">${fmtPct(ch)}</span><span>Об <b>${fmtBig(x.volume)}</b></span>`+
+    (ih?`<div class="ind">${ih}</div>`:'');
+  const r = ind.rsi?.[i];
+  $('rsiLabel').innerHTML = `RSI 14 <span style="color:${C.rsi}">${r==null?'—':r.toFixed(1)}</span>`;
+}
+const onMove = p => {
+  if(!p || p.logical==null || p.logical<0 || p.logical>=state.bars.length){ hoverIdx=null; legend(); return; }
+  hoverIdx = Math.round(p.logical); legend(hoverIdx);
+};
+chart.subscribeCrosshairMove(onMove); rsiChart.subscribeCrosshairMove(onMove);
+
+/* ---------- Шапка, вотчлист, сделки ---------- */
+function renderQuote(){
+  const info = symInfo(state.sym), t = state.tickers[state.sym];
+  $('qSym').innerHTML = `${info.b}<small>/USDT</small>`;
+  const last = state.bars[state.bars.length-1];
+  const price = last ? last.close : t?.price;
+  if(price!=null){ $('qPrice').textContent = fmtP(price); }
+  if(t){
+    const ch = t.open ? (price-t.open)/t.open*100 : t.chg;
+    $('qChg').textContent = fmtPct(ch); $('qChg').className = 'quote-chg num '+(ch>=0?'up':'down');
+    $('qPrice').className = 'quote-price num '+(ch>=0?'up':'down');
+    $('sHigh').textContent = fmtP(Math.max(t.high, price||0));
+    $('sLow').textContent  = fmtP(Math.min(t.low, price||Infinity));
+    $('sVol').textContent  = fmtBig(t.qvol)+' $';
+  }
+  document.title = price!=null ? `${fmtP(price)} · ${info.b}/USDT — Трейд Арена` : 'Трейд Арена — графики';
+}
+function renderWatch(){
+  const ul = $('watch');
+  if(!ul.children.length){
+    ul.innerHTML = SYMBOLS.map(x=>`<li><button data-s="${x.s}">
+      <div class="w-meta"><span class="w-sym">${x.b}<small>/USDT</small></span></div>
+      <svg class="w-spark" viewBox="0 0 64 28" preserveAspectRatio="none" aria-hidden="true"><polyline fill="none" stroke-width="1.5" points=""/></svg>
+      <div class="w-meta"><span class="w-px num">—</span><span class="w-ch num">—</span></div></button></li>`).join('');
+    ul.addEventListener('click', e => { const b = e.target.closest('button'); if(b) selectSymbol(b.dataset.s); });
+  }
+  ul.querySelectorAll('button').forEach(btn => {
+    const s = btn.dataset.s, t = state.tickers[s];
+    btn.setAttribute('aria-current', s===state.sym);
+    if(!t) return;
+    const px = btn.querySelector('.w-px'), ch = btn.querySelector('.w-ch');
+    px.textContent = fmtP(t.price);
+    ch.textContent = fmtPct(t.chg); ch.className = 'w-ch num '+(t.chg>=0?'up':'down');
+    if(t.spark?.length>1){
+      const mn=Math.min(...t.spark), mx=Math.max(...t.spark), r=(mx-mn)||1;
+      const pts = t.spark.map((v,i)=>`${(i/(t.spark.length-1)*64).toFixed(1)},${(26-(v-mn)/r*24).toFixed(1)}`).join(' ');
+      const pl = btn.querySelector('polyline'); pl.setAttribute('points', pts);
+      pl.setAttribute('stroke', t.spark[t.spark.length-1]>=t.spark[0]?C.up:C.down);
+    }
+  });
+}
+function addTrade(tr){
+  state.trades.unshift(tr); if(state.trades.length>100) state.trades.length=100;
+  const list = $('tList'), d = prec(tr.p);
+  const row = document.createElement('div');
+  row.className = 't-row num flash';
+  row.innerHTML = `<span class="${tr.buy?'up':'down'}">${fmtP(tr.p,d)}</span><span>${fmtQ(tr.q)}</span><span>${fmtTime(tr.t)}</span>`;
+  list.prepend(row);
+  while(list.children.length>60) list.lastChild.remove();
+  const buys = state.trades.filter(x=>x.buy).reduce((a,x)=>a+x.p*x.q,0);
+  const all  = state.trades.reduce((a,x)=>a+x.p*x.q,0) || 1;
+  const bp = buys/all*100;
+  $('bsBar').style.width = bp.toFixed(1)+'%';
+  $('bsBuy').textContent = bp.toFixed(0)+'% покупки'; $('bsSell').textContent = (100-bp).toFixed(0)+'% продажи';
+}
+function clearTrades(){ state.trades=[]; $('tList').innerHTML=''; }
+function setStatus(mode, text){ const el=$('status'); el.className='status '+mode; $('statusText').textContent=text; }
+
+/* ---------- Источник: Binance ---------- */
+async function getJSON(path){
+  const hosts = state.rest ? [state.rest, ...REST.filter(h=>h!==state.rest)] : REST;
+  let err;
+  for(const h of hosts){
+    try{
+      const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(), 7000);
+      const r = await fetch(h+path, {signal:ctl.signal}); clearTimeout(to);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      state.rest = h; state.ws = WS[REST.indexOf(h)];
+      return await r.json();
+    }catch(e){ err = e; }
+  }
+  throw err;
+}
+const kToBar = k => ({time:Math.floor(k[0]/1000)+TZ, open:+k[1], high:+k[2], low:+k[3], close:+k[4], volume:+k[5]});
+
+async function loadLive(id){
+  const raw = await getJSON(`/api/v3/klines?symbol=${state.sym}&interval=${state.iv}&limit=500`);
+  if(id!==state.loadId) return;
+  state.bars = raw.map(kToBar);
+  setAll();
+  try{
+    const r = await getJSON(`/api/v3/aggTrades?symbol=${state.sym}&limit=40`);
+    if(id!==state.loadId) return;
+    clearTrades(); r.forEach(t=>addTrade({p:+t.p,q:+t.q,t:t.T,buy:!t.m}));
+  }catch(e){}
+  openMainSocket();
+}
+function openMainSocket(){
+  if(state.sockMain){ state.sockMain.onclose=null; state.sockMain.close(); }
+  const s = state.sym.toLowerCase();
+  const ws = new WebSocket(`${state.ws}/stream?streams=${s}@kline_${state.iv}/${s}@aggTrade`);
+  state.sockMain = ws;
+  ws.onopen = () => setStatus('live','Онлайн · Binance');
+  ws.onmessage = ev => {
+    const m = JSON.parse(ev.data), d = m.data; if(!d) return;
+    if(d.e==='kline'){
+      const k = d.k, bar = {time:Math.floor(k.t/1000)+TZ, open:+k.o, high:+k.h, low:+k.l, close:+k.c, volume:+k.v};
+      const last = state.bars[state.bars.length-1];
+      if(last && bar.time===last.time) state.bars[state.bars.length-1]=bar;
+      else if(!last || bar.time>last.time) state.bars.push(bar); else return;
+      updateLast(); renderQuote();
+    } else if(d.e==='aggTrade'){
+      addTrade({p:+d.p, q:+d.q, t:d.T, buy:!d.m});
+    }
+  };
+  ws.onclose = () => { if(state.sockMain!==ws) return; setStatus('','Переподключение…'); setTimeout(()=>{ if(state.sockMain===ws) openMainSocket(); }, 3000); };
+}
+async function loadTickersLive(){
+  const syms = encodeURIComponent(JSON.stringify(SYMBOLS.map(x=>x.s)));
+  const arr = await getJSON(`/api/v3/ticker/24hr?symbols=${syms}`);
+  arr.forEach(t => { state.tickers[t.symbol] = Object.assign(state.tickers[t.symbol]||{}, {
+    price:+t.lastPrice, chg:+t.priceChangePercent, open:+t.openPrice, high:+t.highPrice, low:+t.lowPrice, qvol:+t.quoteVolume}); });
+  renderWatch(); renderQuote();
+  SYMBOLS.forEach(async x => {
+    try{ const k = await getJSON(`/api/v3/klines?symbol=${x.s}&interval=1h&limit=24`);
+      state.tickers[x.s].spark = k.map(r=>+r[4]); renderWatch(); }catch(e){}
+  });
+  if(state.sockWatch) state.sockWatch.close();
+  const ws = new WebSocket(`${state.ws}/stream?streams=`+SYMBOLS.map(x=>x.s.toLowerCase()+'@miniTicker').join('/'));
+  state.sockWatch = ws;
+  let pending = false;
+  ws.onmessage = ev => { const d = JSON.parse(ev.data).data; if(!d) return;
+    const t = state.tickers[d.s]; if(!t) return;
+    t.price=+d.c; t.open=+d.o; t.high=+d.h; t.low=+d.l; t.qvol=+d.q; t.chg=(t.price-t.open)/t.open*100;
+    if(t.spark) t.spark[t.spark.length-1]=t.price;
+    if(!pending){ pending=true; requestAnimationFrame(()=>{ pending=false; renderWatch(); renderQuote(); }); }
+  };
+}
+
+/* ---------- Источник: демо (если Binance недоступен) ---------- */
+let rng = 1;
+const rand = () => { rng = (rng*16807) % 2147483647; return rng/2147483647; };
+function genSeries(base, n, step, endT){
+  const out = []; let p = base*(0.95+rand()*0.1);
+  const vol = 0.004*Math.sqrt(step/3600);
+  for(let i=0;i<n;i++){
+    const o = p, drift = (base-p)/base*0.02;
+    const c = o*(1+drift+(rand()-0.5)*2*vol*1.6);
+    const h = Math.max(o,c)*(1+rand()*vol), l = Math.min(o,c)*(1-rand()*vol);
+    out.push({time:endT-(n-1-i)*step+TZ, open:o, high:h, low:l, close:c, volume:(50+rand()*200)*(62000/base)**0.6*step/3600});
+    p = c;
+  } return out;
+}
+function startDemo(){
+  state.mode = 'demo'; setStatus('demo','Демо-данные: Binance недоступен');
+  SYMBOLS.forEach((x,i) => { rng = 7+i*131; const s = genSeries(x.demo, 24, 3600, Math.floor(Date.now()/3600000)*3600);
+    const p = s[s.length-1].close, o = s[0].open;
+    state.tickers[x.s] = {price:p, open:o, chg:(p-o)/o*100, high:Math.max(...s.map(b=>b.high)), low:Math.min(...s.map(b=>b.low)),
+      qvol:x.demo*1e5*(3+rand()*5), spark:s.map(b=>b.close)}; });
+  renderWatch();
+}
+function loadDemo(){
+  const info = symInfo(state.sym), step = INTERVALS.find(x=>x[0]===state.iv)[2];
+  rng = info.s.split('').reduce((a,c)=>a*31+c.charCodeAt(0),7)%2147483647 + step;
+  const t = state.tickers[state.sym];
+  const endT = Math.floor(Date.now()/1000/step)*step;
+  state.bars = genSeries(t.price, 500, step, endT);
+  const shift = t.price/state.bars[state.bars.length-1].close;
+  state.bars.forEach(b=>{ b.open*=shift; b.high*=shift; b.low*=shift; b.close*=shift; });
+  setAll(); renderQuote(); clearTrades();
+  clearInterval(state.demoTimer);
+  state.demoTimer = setInterval(() => {
+    const b = state.bars[state.bars.length-1], step2 = INTERVALS.find(x=>x[0]===state.iv)[2];
+    const now = Math.floor(Date.now()/1000/step2)*step2+TZ;
+    const p = b.close*(1+(Math.random()-0.5)*0.0012);
+    if(now>b.time) state.bars.push({time:now, open:b.close, high:Math.max(b.close,p), low:Math.min(b.close,p), close:p, volume:0});
+    const x = state.bars[state.bars.length-1];
+    x.close=p; x.high=Math.max(x.high,p); x.low=Math.min(x.low,p);
+    const q = Math.random()*2*(62000/p)**0.6; x.volume+=q;
+    const tk = state.tickers[state.sym]; tk.price=p; tk.chg=(p-tk.open)/tk.open*100; tk.spark[tk.spark.length-1]=p;
+    updateLast(); renderQuote(); renderWatch();
+    addTrade({p, q, t:Date.now(), buy:p>=b.close});
+  }, 900);
+}
+
+/* ---------- Управление ---------- */
+async function load(){
+  const id = ++state.loadId;
+  $('loading').hidden = false; hoverIdx = null;
+  history.replaceState(null,'',`#${state.sym}/${state.iv}`);
+  store.set('sym',state.sym); store.set('iv',state.iv);
+  renderWatch(); renderQuote();
+  document.querySelectorAll('#intervals button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.iv===state.iv));
+  try{
+    if(state.mode==='demo') loadDemo();
+    else await loadLive(id);
+  }catch(e){
+    console.warn('Binance недоступен, включаю демо-режим', e);
+    if(state.sockMain){ state.sockMain.onclose=null; state.sockMain.close(); state.sockMain=null; }
+    startDemo(); loadDemo();
+  }
+  if(id===state.loadId) $('loading').hidden = true;
+}
+function selectSymbol(s){ if(s===state.sym) return; state.sym=s; clearTrades(); load(); }
+
+$('intervals').innerHTML = INTERVALS.map(([k,l])=>`<button data-iv="${k}">${l}</button>`).join('');
+$('intervals').addEventListener('click', e => { const b=e.target.closest('button'); if(!b||b.dataset.iv===state.iv) return; state.iv=b.dataset.iv; load(); });
+$('toggles').addEventListener('click', e => { const b=e.target.closest('.tg'); if(!b) return;
+  state.ind[b.dataset.k] = !state.ind[b.dataset.k]; store.set('ind',state.ind); applyToggles(); legend(hoverIdx??undefined);
+  if(b.dataset.k==='rsi' && state.ind.rsi){ const r=chart.timeScale().getVisibleLogicalRange(); if(r) rsiChart.timeScale().setVisibleLogicalRange(r); setTimeout(alignScales,50);} });
+window.addEventListener('hashchange', () => { const [s,iv] = location.hash.slice(1).split('/');
+  if(symInfo((s||'').toUpperCase())) state.sym=s.toUpperCase(); if(INTERVALS.find(x=>x[0]===iv)) state.iv=iv; load(); });
+
+(async () => {
+  try{ await loadTickersLive(); state.mode='live'; }
+  catch(e){ startDemo(); }
+  load();
+})();
+})();
+</script>
+</body>
+</html>
